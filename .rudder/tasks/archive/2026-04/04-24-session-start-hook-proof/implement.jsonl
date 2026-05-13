@@ -1,0 +1,5 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Session-start hooks live in CLI backend templates and configurators"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Platform hook capabilities and session-start implementation contracts"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Python hook template constraints and cross-platform script behavior"}
+{"file": ".rudder/spec/cli/unit-test/index.md", "reason": "Tests should cover generated session-start output shape"}
+{"file": ".rudder/tasks/04-24-session-start-hook-proof/research/official-hook-success-mechanisms.md", "reason": "Official platform behavior for hook success/injection proof"}

@@ -1,0 +1,6 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .rudder/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Backend spec index for script and hook behavior."}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Python script conventions for .rudder/scripts changes."}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Quality rules for backend changes."}
+{"file": ".rudder/spec/cli/backend/workflow-state-contract.md", "reason": "Context injection and workflow-state contract touched by session start behavior."}
+{"file": ".rudder/spec/guides/cross-platform-thinking-guide.md", "reason": "Cross-platform rules for generated Python scripts and network behavior."}

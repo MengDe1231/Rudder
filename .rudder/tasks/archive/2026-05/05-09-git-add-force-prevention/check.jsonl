@@ -1,0 +1,3 @@
+{"file": ".rudder/tasks/05-09-git-add-force-prevention/prd.md", "reason": "AC list — verify .gitignore excluded scenario, anti-`-f` text in error output, no junk paths added"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Verify script conventions still followed"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test pattern conventions"}

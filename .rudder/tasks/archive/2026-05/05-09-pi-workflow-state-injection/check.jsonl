@@ -1,0 +1,3 @@
+{"file": ".rudder/tasks/05-09-pi-workflow-state-injection/prd.md", "reason": "AC list — verify three injection points + no regression on PRD/jsonl logic"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Cross-platform consistency — Pi injection should match the contract other platforms follow"}
+{"file": ".rudder/spec/cli/backend/workflow-state-contract.md", "reason": "Verify [workflow-state:STATUS] tag semantics respected"}

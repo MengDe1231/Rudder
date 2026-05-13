@@ -1,0 +1,4 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Verify CLI backend conventions for hook/template changes"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Verify all session-start implementations stay in sync"}
+{"file": ".rudder/spec/cli/unit-test/index.md", "reason": "Verify tests cover hook output changes"}
+{"file": ".rudder/tasks/04-24-session-start-hook-proof/research/official-hook-success-mechanisms.md", "reason": "Check behavior against official platform docs"}

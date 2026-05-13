@@ -1,0 +1,10 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/spec/shared/index.md", "reason": "Shared coding standards"}
+{"file": ".rudder/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".rudder/spec/backend/api-module.md", "reason": "API module conventions"}
+{"file": ".rudder/spec/backend/quality.md", "reason": "Code quality requirements"}
+{"file": ".rudder/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".rudder/spec/frontend/components.md", "reason": "Component conventions"}
+{"file": "src/constants/paths.ts", "reason": "Core path constants to extract to packages/core"}
+{"file": "src/types/ai-tools.ts", "reason": "Type definitions to share between CLI and GUI"}
+{"file": "package.json", "reason": "Current package config to split into workspace structure"}

@@ -1,0 +1,4 @@
+{"file": ".rudder/tasks/05-10-session-auto-commit-config/prd.md", "reason": "Locked decisions (session_auto_commit key, full/stage/none, drop 0.5.10 -f retry), AC, mode behavior table"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Script conventions — auto-commit pattern is documented here; may need note about new config flag"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Surgical-changes — touch only safe_commit.py / config.py / add_session.py / task_store.py / config.yaml"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test conventions — regression test rewrites; new mode-coverage tests"}

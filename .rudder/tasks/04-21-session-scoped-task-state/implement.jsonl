@@ -1,0 +1,6 @@
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Python script conventions for shared hook and .rudder/scripts resolver changes"}
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Backend entry point for CLI scripts, hooks, template generation, and quality rules"}
+{"file": ".rudder/tasks/04-21-session-scoped-task-state/research/session-identity-platform-survey.md", "reason": "Research source of truth for platform session identity fields and support tiers"}
+{"file": ".rudder/spec/guides/cross-platform-thinking-guide.md", "reason": "Cross-platform path, command, and hook payload assumptions are central to this task"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Platform hook/configurator patterns for Claude, Cursor, Codex, OpenCode, Gemini, Droid, Qoder, and CodeBuddy"}
+{"file": ".rudder/spec/cli/unit-test/index.md", "reason": "Testing entry point for resolver, task command, and hook/template behavior"}

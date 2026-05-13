@@ -1,0 +1,2 @@
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Acceptance: confirm Copilot section in spec reflects Microsoft hooks documentation status (no permanent 'ignores hook output' claim left)"}
+{"file": ".rudder/tasks/05-11-soften-copilot-sessionstart-systemmessage-no-longer-claim-copilot-ignores/prd.md", "reason": "Final acceptance checklist — every box must verifiably pass; ensure decision (remove vs soften) was respected"}

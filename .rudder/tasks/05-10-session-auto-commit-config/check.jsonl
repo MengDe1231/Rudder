@@ -1,0 +1,3 @@
+{"file": ".rudder/tasks/05-10-session-auto-commit-config/prd.md", "reason": "AC list — three modes × ignored / not-ignored × add_session / task_archive matrix"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Verify script conventions still followed; check if auto-commit pattern doc needs update"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test pattern conventions"}

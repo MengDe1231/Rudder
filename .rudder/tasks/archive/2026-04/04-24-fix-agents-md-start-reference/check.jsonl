@@ -1,0 +1,2 @@
+{"file": ".rudder/tasks/04-24-fix-agents-md-start-reference/prd.md", "reason": "Acceptance criteria to verify — no /rudder:start residue, RUDDER:START/END markers preserved, repo-root and docs-site copies synced, tests/lint green"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Lint/typecheck/test quality bar for the check phase"}

@@ -1,0 +1,5 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "CLI backend checklist for any future Pi configurator or template implementation"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Pi is an extension-backed platform and shared Agent Skills affect managed platform paths"}
+{"file": ".rudder/spec/cli/unit-test/index.md", "reason": "Future implementation will need template/configurator regression tests"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Vitest conventions for the future implementation"}
+{"file": ".rudder/tasks/04-28-pi-shared-agents-subagent-config/research/pi-shared-agents-subagent-config.md", "reason": "Research findings and recommended implementation shape"}

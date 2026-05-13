@@ -1,0 +1,6 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "bootstrap task creation is part of init platform flow"}
+{"file": ".rudder/spec/cli/backend/error-handling.md", "reason": "fixing silent try/catch around bootstrap creation"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "init_developer.py semantics + potential slug helpers"}
+{"file": ".rudder/spec/cli/backend/directory-structure.md", "reason": ".rudder/ layout + FILE_NAMES.DEVELOPER location"}

@@ -1,0 +1,4 @@
+{"file": ".opencode/commands/rudder/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".opencode/commands/rudder/check.md", "reason": "Code quality check spec"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Quality check"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test conventions"}

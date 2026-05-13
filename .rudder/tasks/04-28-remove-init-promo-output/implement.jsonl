@@ -1,0 +1,4 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "CLI backend pre-development checklist and init behavior guidance."}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Init flow conventions and platform setup behavior context."}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "TypeScript quality rules for CLI source changes."}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Regression test expectations for changed init behavior."}

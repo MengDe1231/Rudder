@@ -1,0 +1,6 @@
+{"file": ".rudder/spec/docs-site/docs/index.md", "reason": "Docs-site package-level guidance for beta documentation work."}
+{"file": ".rudder/spec/docs-site/docs/directory-structure.md", "reason": "Explains docs-site layout, beta vs release track, and mirrored zh structure."}
+{"file": ".rudder/spec/docs-site/docs/mdx-guidelines.md", "reason": "MDX authoring rules to follow when updating beta docs pages."}
+{"file": ".rudder/spec/docs-site/docs/style-guide.md", "reason": "Docs writing style for user-facing beta content."}
+{"file": ".rudder/spec/docs-site/docs/sync-on-change.md", "reason": "Sync matrix for platform, workflow, command, skill, and schema documentation changes."}
+{"file": ".rudder/tasks/04-27-docs-site-beta-task-pi-docs-audit/research/docs-site-beta-audit.md", "reason": "Page-level audit of beta docs that need session runtime and Pi Agent updates."}

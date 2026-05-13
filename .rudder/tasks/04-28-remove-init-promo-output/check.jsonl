@@ -1,0 +1,4 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "CLI backend quality checklist for changed init behavior."}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Verify init flow remains consistent with platform integration rules."}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Verify TypeScript style and dead-code cleanup."}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Verify regression test coverage and style."}

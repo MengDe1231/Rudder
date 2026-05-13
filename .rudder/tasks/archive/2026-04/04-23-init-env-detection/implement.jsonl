@@ -1,0 +1,4 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".rudder/spec/guides/cross-platform-thinking-guide.md", "reason": "init 环境检测与跨平台适配直接相关"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "init 需要按 OS 生成正确的 python/python3、hook 和帮助文案"}
