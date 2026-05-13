@@ -471,6 +471,30 @@ def _check_legacy_spec(rudder_dir: Path, is_mono: bool, packages: dict) -> str |
     )
 
 
+def _build_tool_paths_block(rudder_dir: Path) -> str:
+    """Build <tool-paths> block for session-start context."""
+    repo_root = rudder_dir.parent
+    try:
+        from common.rudder_config import resolve_tools  # type: ignore[import-not-found]
+        tools = resolve_tools(repo_root)
+    except Exception:
+        return ""
+
+    if not tools:
+        return ""
+
+    lines = ["<tool-paths>", "Tool paths for this project:"]
+    for name, info in sorted(tools.items()):
+        path = info.get("path", name)
+        parts = [path]
+        version = info.get("version")
+        if version:
+            parts.append(f"(required version: {version})")
+        lines.append(f"- {name}: {' '.join(parts)}")
+    lines.append("</tool-paths>")
+    return "\n".join(lines)
+
+
 def _resolve_spec_scope(
     is_mono: bool,
     packages: dict,
@@ -754,6 +778,12 @@ Read and follow all instructions below carefully.
         "`python3 ./.rudder/scripts/get_context.py --mode packages`\n"
     )
     output.write("</guidelines>\n\n")
+
+    # Tool paths block
+    tool_paths_block = _build_tool_paths_block(rudder_dir)
+    if tool_paths_block:
+        output.write(tool_paths_block)
+        output.write("\n\n")
 
     # Check task status and inject structured tag
     task_status = _get_task_status(rudder_dir, hook_input)

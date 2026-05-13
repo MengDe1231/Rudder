@@ -443,3 +443,60 @@ def get_spec_scope(repo_root: Path | None = None) -> list[str] | str | None:
     if isinstance(scope, list):
         return [str(s) for s in scope]
     return None
+
+
+# =============================================================================
+# Tool Path Configuration
+# =============================================================================
+
+LOCAL_CONFIG_FILE = "config.local.yaml"
+
+
+def _load_local_config(repo_root: Path | None = None) -> dict:
+    """Load .rudder/config.local.yaml (personal overrides). Returns {} on missing."""
+    root = repo_root or get_repo_root()
+    local_config_file = root / DIR_WORKFLOW / LOCAL_CONFIG_FILE
+    try:
+        content = local_config_file.read_text(encoding="utf-8")
+        return parse_simple_yaml(content)
+    except (OSError, IOError):
+        return {}
+
+
+def resolve_tools(repo_root: Path | None = None) -> dict[str, dict]:
+    """Merge tools from config.yaml with local path overrides from config.local.yaml.
+
+    config.local.yaml wins on path; config.yaml declares what tools are needed.
+    Returns dict like:
+        {
+            "java": {"path": "/usr/.../java", "version": "21"},
+            "mvn":  {"path": "/opt/maven/bin/mvn", "version": "3.9"},
+        }
+    """
+    root = repo_root or get_repo_root()
+
+    # Read required tools from config.yaml
+    config = _load_config(root)
+    tools = config.get("tools")
+    if not isinstance(tools, dict):
+        return {}
+
+    # Read personal overrides from config.local.yaml
+    local = _load_local_config(root)
+    local_tools = local.get("tools")
+    local_overrides: dict[str, dict] = {}
+    if isinstance(local_tools, dict):
+        for name, cfg in local_tools.items():
+            if isinstance(cfg, dict):
+                local_overrides[name] = cfg
+
+    result: dict[str, dict] = {}
+    for name, cfg in tools.items():
+        merged: dict = cfg if isinstance(cfg, dict) else {"version": str(cfg)}
+        # Personal override wins on path
+        if name in local_overrides:
+            for k, v in local_overrides[name].items():
+                merged[k] = v
+        result[name] = merged
+
+    return result

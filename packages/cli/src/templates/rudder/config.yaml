@@ -86,5 +86,33 @@ max_journal_lines: 2000
 # (main agent spawns rudder-implement / rudder-check / rudder-research
 # sub-agents).
 #
-# codex:
+#   codex:
 #   dispatch_mode: inline  # or "sub-agent" to dispatch rudder-* sub-agents
+
+#-------------------------------------------------------------------------------
+# Tool Path Configuration
+#-------------------------------------------------------------------------------
+# Declare tools your project requires. Rudder will:
+# 1. Check config.local.yaml for machine-specific absolute paths
+# 2. Auto-detect from version files (.sdkmanrc, .nvmrc, .tool-versions, etc.)
+# 3. Fall back to searching PATH
+#
+# Version verification: Rudder runs <tool> --version and refuses to use
+# a mismatched version. If version_verified is false, the hook will warn.
+#
+# Example:
+# tools:
+#   java:
+#     version: "21"          # Required version prefix (e.g., "21" matches "21.0.2")
+#     binary: "java"         # Binary name to search in PATH (optional, defaults to key)
+#   node:
+#     version: "18"
+#   mvn:
+#     version: "3.9"
+#
+# Personal overrides (.rudder/config.local.yaml — gitignored):
+# tools:
+#   java:
+#     path: "/usr/local/sdkman/candidates/java/21.0.2-open/bin/java"
+#   mvn:
+#     path: "/opt/maven/bin/mvn"

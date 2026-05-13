@@ -20,7 +20,7 @@ import subprocess
 from pathlib import Path
 
 from .active_task import resolve_context_key
-from .config import get_git_packages
+from .config import get_git_packages, resolve_tools
 from .git import run_git
 from .packages_context import get_packages_section
 from .tasks import iter_active_tasks, load_task, get_all_statuses, children_progress
@@ -487,6 +487,11 @@ def get_context_json(repo_root: Path | None = None) -> dict:
     if pkg_git_info:
         result["packageGit"] = pkg_git_info
 
+    # Tool paths
+    tools = resolve_tools(repo_root)
+    if tools:
+        result["tools"] = tools
+
     return result
 
 
@@ -644,6 +649,19 @@ def get_context_text(repo_root: Path | None = None) -> str:
     lines.append(f"Tasks: {DIR_WORKFLOW}/{DIR_TASKS}/")
     lines.append(f"Spec: {DIR_WORKFLOW}/{DIR_SPEC}/")
     lines.append("")
+
+    # Tool paths
+    tools = resolve_tools(repo_root)
+    if tools:
+        lines.append("## TOOL PATHS")
+        for name, info in sorted(tools.items()):
+            path = info.get("path", name)
+            version = info.get("version")
+            parts = [f"- {name}: {path}"]
+            if version:
+                parts.append(f"(required: {version})")
+            lines.append(" ".join(parts))
+        lines.append("")
 
     lines.append("========================================")
 
