@@ -1,0 +1,4 @@
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "OpenCode, Pi, and platform hook context injection contracts"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "RUDDER_CONTEXT_ID subprocess and shell bridge contract"}
+{"file": ".rudder/spec/guides/cross-platform-thinking-guide.md", "reason": "Cross-platform shell command guidance"}
+{"file": ".rudder/tasks/05-11-shell-dialect-context-injection-audit/research/shell-dialect-context-injection-audit.md", "reason": "Research findings for issue #261 implementation"}

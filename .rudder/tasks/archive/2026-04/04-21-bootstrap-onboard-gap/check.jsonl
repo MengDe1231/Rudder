@@ -1,0 +1,5 @@
+{"file": ".opencode/commands/rudder/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".opencode/commands/rudder/check.md", "reason": "Code quality check spec"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "final lint/typecheck bar"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "vitest test conventions"}
+{"file": ".rudder/spec/cli/unit-test/integration-patterns.md", "reason": "creator/joiner/no-op scenarios need integration-style fs fixtures"}

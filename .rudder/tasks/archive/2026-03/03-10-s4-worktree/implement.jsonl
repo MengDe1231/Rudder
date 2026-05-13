@@ -1,0 +1,7 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Backend development guide"}
+{"file": "packages/cli/src/templates/rudder/scripts/multi_agent/start.py", "reason": "submodule init 逻辑"}
+{"file": "packages/cli/src/templates/rudder/scripts/multi_agent/create_pr.py", "reason": "submodule PR 逻辑"}
+{"file": "packages/cli/src/templates/rudder/scripts/multi_agent/cleanup.py", "reason": "submodule PR 提醒"}
+{"file": "packages/cli/src/templates/rudder/scripts/common/config.py", "reason": "get_submodule_packages + validate_package"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Python script conventions"}

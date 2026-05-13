@@ -1,0 +1,5 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Backend spec index for workflow and hook template changes"}
+{"file": ".rudder/spec/cli/backend/workflow-state-contract.md", "reason": "Runtime contract for workflow-state breadcrumb behavior"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Platform hook distribution and sub-agent context paths"}
+{"file": ".rudder/spec/cli/unit-test/index.md", "reason": "Unit test spec index for regression coverage"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test conventions for regression/template tests"}

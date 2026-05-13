@@ -1,0 +1,6 @@
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Verify platform configurator and template collection consistency"}
+{"file": ".rudder/spec/cli/backend/migrations.md", "reason": "Verify update/hash tracking implications"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Verify test coverage decisions"}
+{"file": ".rudder/spec/docs-site/docs/sync-on-change.md", "reason": "Verify docs-site sync for skill behavior changes"}
+{"file": ".rudder/tasks/04-28-docs-meta-skill-built-in-install/research/repo-install-paths.md", "reason": "Review against researched implementation constraints"}
+{"file": ".rudder/tasks/04-28-docs-meta-skill-built-in-install/research/marketplace-meta-skill-drift.md", "reason": "Verify implementation against drift audit and update plan"}

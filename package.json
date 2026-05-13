@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "build": "pnpm --filter @mengde1231/rudder build",
+    "test": "pnpm --filter @mengde1231/rudder test",
+    "lint": "pnpm --filter @mengde1231/rudder lint",
+    "typecheck": "pnpm --filter @mengde1231/rudder typecheck",
+    "release": "pnpm --filter @mengde1231/rudder release",
+    "release:minor": "pnpm --filter @mengde1231/rudder release:minor",
+    "release:beta": "pnpm --filter @mengde1231/rudder release:beta",
+    "release:rc": "pnpm --filter @mengde1231/rudder release:rc"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}

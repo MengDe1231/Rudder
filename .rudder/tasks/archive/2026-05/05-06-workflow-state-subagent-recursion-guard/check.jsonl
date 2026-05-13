@@ -1,0 +1,5 @@
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Backend spec index for reviewing workflow and hook template changes"}
+{"file": ".rudder/spec/cli/backend/workflow-state-contract.md", "reason": "Review workflow-state breadcrumb contract changes"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Review platform hook distribution implications"}
+{"file": ".rudder/spec/cli/unit-test/index.md", "reason": "Review test coverage requirements"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Review test style and regression coverage"}

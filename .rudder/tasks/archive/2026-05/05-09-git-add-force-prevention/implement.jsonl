@@ -1,0 +1,4 @@
+{"file": ".rudder/tasks/05-09-git-add-force-prevention/prd.md", "reason": "Locked decisions (A: smart stderr detection + explicit anti-`-f` hint, C: tight path whitelist, B deferred), AC list, out-of-scope"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Script conventions — task.py / add_session.py auto-commit invariants must be followed"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Surgical-changes principle — don't touch unrelated logic in add_session.py / task.py"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test conventions — sub-agent must check whether Python script tests exist and how they're run"}

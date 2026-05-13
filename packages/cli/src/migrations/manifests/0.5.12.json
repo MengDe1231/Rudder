@@ -1,0 +1,9 @@
+{
+  "version": "0.5.12",
+  "description": "Patch: update workflow.md as a whole runtime template during rudder update.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Bug Fixes:**\n- fix(update): update `.rudder/workflow.md` as a whole hash-tracked template so runtime phase routing markers, including Codex `codex-inline` / `codex-sub-agent` blocks, refresh during `rudder update`.",
+  "migrations": [],
+  "notes": "Run `rudder update` to refresh hash-tracked workflow templates. No migration required."
+}

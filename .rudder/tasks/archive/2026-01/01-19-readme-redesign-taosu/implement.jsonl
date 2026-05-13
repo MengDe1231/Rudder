@@ -1,0 +1,4 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/structure/shared/index.md", "reason": "Shared coding standards"}
+{"file": ".rudder/structure/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".rudder/structure/frontend/components.md", "reason": "Component conventions"}

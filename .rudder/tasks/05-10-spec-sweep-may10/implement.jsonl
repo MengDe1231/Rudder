@@ -1,0 +1,7 @@
+{"file": ".rudder/tasks/05-10-spec-sweep-may10/prd.md", "reason": "Locked decisions, 6 themes, sub-agent split by file ownership"}
+{"file": ".rudder/spec/cli/backend/script-conventions.md", "reason": "Owned by sub-agent 1 — Git interaction + Config helpers extensions"}
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "Owned by sub-agent 2 — Pi + cross-platform consistency. Style reference for all sub-agents (audit-confirmed best-maintained)"}
+{"file": ".rudder/spec/cli/backend/commands-mem.md", "reason": "Owned by sub-agent 3 — stale Codex degrade fix + new lessons subsection"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Owned by sub-agent 4 — Native dependency policy"}
+{"file": ".rudder/spec/cli/backend/migrations.md", "reason": "Owned by sub-agent 4 — may host Cross-branch release flow, alternatively new release-process.md"}
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "If new release-process.md is created, must be linked from index"}

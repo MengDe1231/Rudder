@@ -1,0 +1,5 @@
+{"file": ".rudder/spec/cli/backend/platform-integration.md", "reason": "platform template authoring conventions"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "general code quality + invariants for cli package"}
+{"file": "packages/cli/src/templates/cursor/agents/rudder-research.md", "reason": "shared body shape used by claude/cursor/droid/gemini/codebuddy — copy as opencode body"}
+{"file": "packages/cli/src/templates/claude/agents/rudder-research.md", "reason": "frontmatter description canonical wording"}
+{"file": "packages/cli/src/templates/opencode/agents/rudder-research.md", "reason": "the file being rewritten"}

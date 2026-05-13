@@ -1,0 +1,4 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/spec/cli/backend/index.md", "reason": "Backend development guide"}
+{"file": ".rudder/spec/cli/backend/quality-guidelines.md", "reason": "Code quality standards"}
+{"file": ".rudder/spec/cli/unit-test/conventions.md", "reason": "Test conventions"}

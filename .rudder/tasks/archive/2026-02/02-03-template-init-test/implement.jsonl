@@ -1,0 +1,5 @@
+{"file": ".rudder/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".rudder/spec/shared/index.md", "reason": "Shared coding standards"}
+{"file": ".rudder/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".rudder/spec/backend/api-module.md", "reason": "API module conventions"}
+{"file": ".rudder/spec/backend/quality.md", "reason": "Code quality requirements"}
