@@ -227,6 +227,32 @@ def _read_rudder_config(root: Path) -> dict:
         return {}
 
 
+def _build_tool_paths_block(root: Path) -> str:
+    """Build <tool-paths> block for per-turn breadcrumb."""
+    try:
+        scripts_dir = root / ".rudder" / "scripts"
+        if str(scripts_dir) not in sys.path:
+            sys.path.insert(0, str(scripts_dir))
+        from common.rudder_config import resolve_tools  # type: ignore[import-not-found]
+        tools = resolve_tools(root)
+    except Exception:
+        return ""
+
+    if not tools:
+        return ""
+
+    lines = ["<tool-paths>", "Tool paths:"]
+    for name, info in sorted(tools.items()):
+        path = info.get("path", name)
+        parts = [path]
+        version = info.get("version")
+        if version:
+            parts.append(f"(required: {version})")
+        lines.append(f"- {name}: {' '.join(parts)}")
+    lines.append("</tool-paths>")
+    return "\n".join(lines)
+
+
 def _codex_mode_banner(config: dict) -> str:
     """Emit a `<codex-mode>` banner for the additionalContext payload.
 
@@ -350,6 +376,11 @@ def main() -> int:
     hook_event_name = (
         "BeforeAgent" if platform == "gemini" else "UserPromptSubmit"
     )
+
+    # Append tool paths to the breadcrumb for all platforms
+    tool_paths = _build_tool_paths_block(root)
+    if tool_paths:
+        breadcrumb = f"{breadcrumb}\n\n{tool_paths}"
 
     output = {
         "hookSpecificOutput": {

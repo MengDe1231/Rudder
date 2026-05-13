@@ -30,3 +30,6 @@
 # Python cache
 **/__pycache__/
 **/*.pyc
+
+# Personal tool path overrides (machine-specific, not shared)
+config.local.yaml

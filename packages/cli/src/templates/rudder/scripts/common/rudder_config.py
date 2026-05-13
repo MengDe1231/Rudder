@@ -129,3 +129,51 @@ def read_rudder_config(repo_root: Optional[Path] = None) -> dict:
     except Exception:
         return {}
     return parsed if isinstance(parsed, dict) else {}
+
+
+# =============================================================================
+# Tool Path Configuration (mirrors config.py for hook usage)
+# =============================================================================
+
+LOCAL_CONFIG_FILE = "config.local.yaml"
+
+
+def _load_local_config(repo_root: Optional[Path] = None) -> dict:
+    """Load .rudder/config.local.yaml (personal overrides). Returns {} on missing."""
+    root = repo_root or Path.cwd()
+    local_config_file = root / ".rudder" / LOCAL_CONFIG_FILE
+    try:
+        content = local_config_file.read_text(encoding="utf-8")
+        return parse_simple_yaml(content)
+    except (OSError, IOError):
+        return {}
+
+
+def resolve_tools(repo_root: Optional[Path] = None) -> dict[str, dict]:
+    """Merge tools from config.yaml with local path overrides.
+
+    config.local.yaml wins on path; config.yaml declares what tools are needed.
+    """
+    root = repo_root or Path.cwd()
+    config = read_rudder_config(root)
+    tools = config.get("tools")
+    if not isinstance(tools, dict):
+        return {}
+
+    local = _load_local_config(root)
+    local_tools = local.get("tools")
+    overrides: dict[str, dict] = {}
+    if isinstance(local_tools, dict):
+        for name, cfg in local_tools.items():
+            if isinstance(cfg, dict):
+                overrides[name] = cfg
+
+    result: dict[str, dict] = {}
+    for name, cfg in tools.items():
+        merged = cfg if isinstance(cfg, dict) else {"version": str(cfg)}
+        if name in overrides:
+            for k, v in overrides[name].items():
+                merged[k] = v
+        result[name] = merged
+
+    return result

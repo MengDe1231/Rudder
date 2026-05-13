@@ -157,6 +157,7 @@ No active task. **A Direct answer** — pure Q&A / explanation / lookup / chat; 
 
 ### Phase 1: Plan
 - 1.0 Create task `[required · once]` (just `task.py create`; status enters planning)
+- 1.0.5 Prepare SQL directory `[conditional · once]` (DDL tasks only)
 - 1.1 Requirement exploration `[required · repeatable]`
 - 1.2 Research `[optional · repeatable]`
 - 1.3 Configure context `[required · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi
@@ -167,6 +168,7 @@ No active task. **A Direct answer** — pure Q&A / explanation / lookup / chat; 
 
 [workflow-state:planning]
 Load the `rudder-brainstorm` skill and iterate on prd.md with the user.
+Phase 1.0.5 (conditional, once): if this task involves DDL operations (create/alter tables, add/drop columns, migration scripts), create `{TASK_DIR}/sql/` via `mkdir -p .rudder/tasks/<task-dir>/sql/`. Skip if no database changes.
 Phase 1.3 (required, once): before `task.py start`, you MUST curate `implement.jsonl` and `check.jsonl` — list the spec / research files sub-agents need so they get the right context injected. You may skip only if the jsonl already has agent-curated entries (the seed `_example` row alone doesn't count).
 Then run `task.py start <task-dir>` to flip status to in_progress.
 [/workflow-state:planning]
@@ -179,6 +181,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 
 [workflow-state:planning-inline]
 Load the `rudder-brainstorm` skill and iterate on prd.md with the user.
+Phase 1.0.5 (conditional, once): if this task involves DDL operations (create/alter tables, add/drop columns, migration scripts), create `{TASK_DIR}/sql/` via `mkdir -p .rudder/tasks/<task-dir>/sql/`. Skip if no database changes.
 Phase 1.3 jsonl curation is **skipped** in inline dispatch mode — the main session loads `rudder-before-dev` directly in Phase 2 and reads spec context itself, so there is no sub-agent to inject jsonl into.
 Then run `task.py start <task-dir>` to flip status to in_progress.
 [/workflow-state:planning-inline]
@@ -325,6 +328,20 @@ After this command succeeds, the per-turn breadcrumb auto-switches to `[workflow
 ⚠️ **Run only `create` here — do not also run `start`**. `start` flips status to `in_progress`, which switches the breadcrumb to the implementation phase before brainstorm + jsonl are done — the AI will silently skip them. Save `start` for step 1.4, after jsonl curation is complete.
 
 Skip when `python3 ./.rudder/scripts/task.py current --source` already points to a task.
+
+#### 1.0.5 Prepare SQL directory `[conditional · once]`
+
+**Trigger**: the task involves database DDL operations — creating tables, modifying tables, adding/dropping columns, changing indexes, migration scripts, etc.
+
+If the task does NOT involve DDL, skip this step entirely.
+
+When triggered, create an `sql/` subdirectory under the task directory:
+
+```bash
+mkdir -p .rudder/tasks/<task-dir>/sql/
+```
+
+**Purpose**: all DDL migration scripts generated during implementation are placed here, bound to the task directory and PRD. On archive, the SQL files move with the task for traceability — no scattered SQL files across the codebase.
 
 #### 1.1 Requirement exploration `[required · repeatable]`
 
