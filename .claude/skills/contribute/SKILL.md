@@ -10,7 +10,7 @@ Contributions are split across two repos:
 | What | Repo | Purpose |
 |------|------|---------|
 | Documentation pages | [MengDe1231/docs](https://github.com/MengDe1231/docs) | Mintlify doc site |
-| Skills + Spec templates | [MengDe1231/Rudder](https://github.com/MengDe1231/Rudder) | `marketplace/` directory |
+| Skills + Spec templates | [MengDe1231/Nexus](https://github.com/MengDe1231/Nexus) | `rudder/` directory (marketplace index + templates) |
 
 ## Docs Repo Structure
 
@@ -45,23 +45,23 @@ docs/
 └── zh/showcase/           # Chinese showcase
 ```
 
-## Rudder Main Repo Marketplace Structure
+## Nexus Repo Marketplace Structure
 
 ```
-marketplace/
-├── index.json             # Template registry (lists all available templates)
-├── README.md              # Marketplace overview
-├── specs/                 # Spec templates
-│   └── electron-fullstack/
-│       ├── README.md
-│       ├── frontend/
-│       ├── backend/
-│       ├── guides/
-│       └── shared/
-└── skills/                # Skills
-    └── rudder-meta/
-        ├── SKILL.md
-        └── references/
+Nexus/
+└── rudder/
+    ├── index.json             # Template registry (lists all available templates)
+    ├── specs/                 # Spec templates
+    │   └── electron-fullstack/
+    │       ├── README.md
+    │       ├── frontend/
+    │       ├── backend/
+    │       ├── guides/
+    │       └── shared/
+    └── skills/                # Skills
+        └── rudder-meta/
+            ├── SKILL.md
+            └── references/
 ```
 
 ## Understanding docs.json
@@ -120,12 +120,12 @@ The navigation uses a **language-based structure**:
 
 ## Contributing a Spec Template
 
-Spec templates live in the **Rudder main repo** at `marketplace/specs/`.
+Spec templates live in the **Nexus repo** at `rudder/specs/`.
 
 ### 1. Create template directory
 
 ```
-marketplace/specs/your-template-name/
+Nexus/rudder/specs/your-template-name/
 ├── README.md              # Template overview (required)
 ├── frontend/              # Frontend guidelines
 │   ├── index.md
@@ -143,7 +143,7 @@ Structure varies by stack. Include directories relevant to your template.
 
 ### 2. Register in index.json
 
-Add your template to `marketplace/index.json` in the Rudder repo:
+Add your template to `rudder/index.json` in the Nexus repo:
 
 ```json
 {
@@ -151,7 +151,7 @@ Add your template to `marketplace/index.json` in the Rudder repo:
   "type": "spec",
   "name": "Your Template Name",
   "description": "Brief description of the template",
-  "path": "marketplace/specs/your-template-name",
+  "path": "rudder/specs/your-template-name",
   "tags": ["relevant", "tags"]
 }
 ```
@@ -205,21 +205,21 @@ Add your template to the table in:
 
 ## Contributing a Skill
 
-Skills live in the **Rudder main repo** at `marketplace/skills/`.
+Skills live in the **Nexus repo** at `rudder/skills/`.
 
 ### 1. Create skill directory
 
 ```
-marketplace/skills/your-skill/
+Nexus/rudder/skills/your-skill/
 ├── SKILL.md               # Skill definition (required)
 └── references/            # Reference docs (optional)
 ```
 
-See [Claude Code Skills documentation](https://code.claude.com/docs/en/skills) for SKILL.md format.
+See [Codex Skills documentation](https://code.Codex.com/docs/en/skills) for SKILL.md format.
 
 ### 2. Register in index.json
 
-Add your skill to `marketplace/index.json` in the Rudder repo:
+Add your skill to `rudder/index.json` in the Nexus repo:
 
 ```json
 {
@@ -227,7 +227,7 @@ Add your skill to `marketplace/index.json` in the Rudder repo:
   "type": "skill",
   "name": "Your Skill Name",
   "description": "Brief description",
-  "path": "marketplace/skills/your-skill",
+  "path": "rudder/skills/your-skill",
   "tags": ["relevant", "tags"]
 }
 ```
@@ -253,7 +253,7 @@ Add your skill to the table in:
 Users install skills via:
 
 ```bash
-npx skills add MengDe1231/Rudder/marketplace -s your-skill
+npx skills add MengDe1231/Nexus/rudder -s your-skill
 ```
 
 ## Contributing a Showcase Project
@@ -400,19 +400,19 @@ Inline HTML is allowed (MDX). See [Mintlify docs](https://mintlify.com/docs/comp
 7. Commit with conventional message (e.g., `docs: add xxx template`)
 8. Push and create PR
 
-**For skills/spec templates** (Rudder repo):
+**For skills/spec templates** (Nexus repo):
 
-1. Fork: `https://github.com/MengDe1231/Rudder`
-2. Clone: `git clone https://github.com/YOUR_USERNAME/Rudder.git`
-3. Add your skill/template under `marketplace/`
-4. Update `marketplace/index.json`
+1. Fork: `https://github.com/MengDe1231/Nexus`
+2. Clone: `git clone https://github.com/YOUR_USERNAME/Nexus.git`
+3. Add your skill/template under `rudder/`
+4. Update `rudder/index.json`
 5. Push and create PR
 
 ## Checklist Before PR
 
 - [ ] Both EN and ZH versions created (for doc pages)
 - [ ] `docs.json` updated for both languages (for doc pages)
-- [ ] `marketplace/index.json` updated (for skills/templates)
+- [ ] `rudder/index.json` updated (for skills/templates)
 - [ ] Overview/index pages updated with new entries
 - [ ] Local preview tested (`pnpm dev`)
 - [ ] No broken links

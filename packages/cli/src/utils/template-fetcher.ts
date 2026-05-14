@@ -15,7 +15,7 @@ import { downloadTemplate } from "giget";
 // =============================================================================
 
 export const TEMPLATE_INDEX_URL =
-  "https://raw.githubusercontent.com/MengDe1231/Nexus/main/marketplace/index.json";
+  "https://raw.githubusercontent.com/MengDe1231/Nexus/main/rudder/index.json";
 
 const TEMPLATE_REPO = "gh:MengDe1231/Nexus";
 
