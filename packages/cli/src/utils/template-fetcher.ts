@@ -1,8 +1,8 @@
 /**
  * Remote template fetcher for Rudder CLI
  *
- * Fetches spec templates from the marketplace directory:
- * https://github.com/MengDe1231/rudder/tree/main/marketplace
+ * Fetches spec templates from the Nexus marketplace:
+ * https://github.com/MengDe1231/Nexus
  */
 
 import fs from "node:fs";
@@ -15,9 +15,9 @@ import { downloadTemplate } from "giget";
 // =============================================================================
 
 export const TEMPLATE_INDEX_URL =
-  "https://raw.githubusercontent.com/MengDe1231/rudder/main/marketplace/index.json";
+  "https://raw.githubusercontent.com/MengDe1231/Nexus/main/marketplace/index.json";
 
-const TEMPLATE_REPO = "gh:MengDe1231/rudder";
+const TEMPLATE_REPO = "gh:MengDe1231/Nexus";
 
 /** Map template type to installation path */
 const INSTALL_PATHS: Record<string, string> = {
