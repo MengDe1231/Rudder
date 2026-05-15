@@ -1048,9 +1048,16 @@ export async function init(options: InitOptions): Promise<void> {
 
   // Set write mode based on options
   let writeMode: WriteMode = "ask";
-  if (options.force) {
+  if (options.force || migration.migrated) {
+    // After Trellis migration, force-overwrite all platform files so the new
+    // rudder-* skills/commands/agents replace the deleted trellis-* ones
+    // without prompting the user for each file.
     writeMode = "force";
-    console.log(chalk.gray("Mode: Force overwrite existing files\n"));
+    if (options.force) {
+      console.log(chalk.gray("Mode: Force overwrite existing files\n"));
+    } else {
+      console.log(chalk.gray("Mode: Force overwrite (post-migration)\n"));
+    }
   } else if (options.skipExisting) {
     writeMode = "skip";
     console.log(chalk.gray("Mode: Skip existing files\n"));
