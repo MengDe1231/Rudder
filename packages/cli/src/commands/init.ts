@@ -1099,6 +1099,7 @@ export async function init(options: InitOptions): Promise<void> {
 
   if (
     !isFirstInit &&
+    !migration.migrated &&
     !options.force &&
     !options.skipExisting &&
     !tasksEmptyEarly
