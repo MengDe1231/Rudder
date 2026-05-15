@@ -99,6 +99,25 @@ describe("trellis-migrate", () => {
       path.join(cwd, ".claude/commands/trellis-implement.md"),
       "# Implement\n",
     );
+
+    // Trellis subdirectory without hyphen (regression: was not removed)
+    fs.mkdirSync(path.join(cwd, ".claude/commands/trellis"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(cwd, ".claude/commands/trellis/start.md"),
+      "# Start\n",
+    );
+
+    // Shared skills with trellis-* prefix
+    fs.mkdirSync(path.join(cwd, ".agents/skills/trellis-meta"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(cwd, ".agents/skills/trellis-meta/SKILL.md"),
+      "# Meta\n",
+    );
+
     // A user-added file that should NOT be removed
     fs.mkdirSync(path.join(cwd, ".claude/skills/my-skill"), {
       recursive: true,
@@ -220,6 +239,22 @@ describe("trellis-migrate", () => {
       ).toBe(false);
       expect(
         fs.existsSync(path.join(tmpDir, ".claude/commands/trellis-implement.md")),
+      ).toBe(false);
+
+      // Nested trellis directory (regression: was not removed)
+      expect(
+        fs.existsSync(path.join(tmpDir, ".claude/commands/trellis")),
+      ).toBe(false);
+      expect(
+        fs.existsSync(path.join(tmpDir, ".claude/commands/trellis/start.md")),
+      ).toBe(false);
+
+      // Shared skills with trellis prefix
+      expect(
+        fs.existsSync(path.join(tmpDir, ".agents/skills/trellis-meta")),
+      ).toBe(false);
+      expect(
+        fs.existsSync(path.join(tmpDir, ".agents/skills/trellis-meta/SKILL.md")),
       ).toBe(false);
 
       // User file preserved
