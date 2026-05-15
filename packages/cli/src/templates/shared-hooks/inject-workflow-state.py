@@ -36,6 +36,14 @@ from pathlib import Path
 from typing import Optional
 
 
+# Force UTF-8 encoding on Windows to avoid default code page issues.
+# Reconfigure before any I/O so that all stdout/stderr are UTF-8.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+
+
 CODEX_SUB_AGENT_NOTICE = """<sub-agent-notice>
 SUB-AGENT NOTICE - READ FIRST IF SPAWNED VIA spawn_agent
 

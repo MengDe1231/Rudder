@@ -381,3 +381,36 @@ export function initializeHashes(cwd: string): number {
   saveHashes(cwd, hashes);
   return Object.keys(hashes).length;
 }
+
+/**
+ * Remove stale orphan entries from `.template-hashes.json`.
+ *
+ * After a template update, some files that were previously tracked may no
+ * longer exist on disk (e.g. a hook was renamed or removed). These orphan
+ * entries accumulate in the manifest and can cause `update`/`uninstall` to
+ * consider paths that are no longer relevant.
+ *
+ * This function is called **before** update/uninstall planning to clean up
+ * any hashes whose files are gone from disk.
+ *
+ * @param cwd - Working directory
+ * @returns Number of orphan entries removed.
+ */
+export function pruneOrphanManifestKeys(cwd: string): number {
+  const hashes = loadHashes(cwd);
+  if (Object.keys(hashes).length === 0) return 0;
+
+  let pruned = 0;
+  for (const posixKey of Object.keys(hashes)) {
+    const absPath = path.join(cwd, ...posixKey.split("/"));
+    if (!fs.existsSync(absPath)) {
+      delete hashes[posixKey];
+      pruned += 1;
+    }
+  }
+
+  if (pruned > 0) {
+    saveHashes(cwd, hashes);
+  }
+  return pruned;
+}
