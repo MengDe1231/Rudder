@@ -1761,23 +1761,14 @@ export async function init(options: InitOptions): Promise<void> {
   // ==========================================================================
 
   // Create workflow structure with project type
-  // After migration, temporarily switch to "skip" mode to protect user content
-  // (.rudder/spec/, .rudder/workspace/, etc.) from being overwritten by blank
-  // templates. Platform files (.claude/, .cursor/, etc.) will use force mode.
-  if (migration.migrated) {
-    setWriteMode("skip");
-  }
   console.log(chalk.blue("📁 Creating workflow structure..."));
   await createWorkflowStructure(cwd, {
     projectType,
     skipSpecTemplates: useRemoteTemplate || migration.migrated,
+    skipConfig: migration.migrated,
     packages: monorepoPackages,
     remoteSpecPackages,
   });
-  // Restore force mode for platform file writes after workflow structure.
-  if (migration.migrated) {
-    setWriteMode("force");
-  }
 
   // Write monorepo packages to config.yaml (non-destructive patch)
   if (monorepoPackages) {
