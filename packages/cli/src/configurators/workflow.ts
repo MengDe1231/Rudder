@@ -55,6 +55,8 @@ export interface WorkflowOptions {
   projectType: ProjectType;
   /** Skip creating local spec templates (when using remote template) — single-repo mode */
   skipSpecTemplates?: boolean;
+  /** Skip overwriting config.yaml (preserve user customizations during migration) */
+  skipConfig?: boolean;
   /** Detected monorepo packages (enables monorepo spec creation) */
   packages?: DetectedPackage[];
   /** Package names that use remote templates (skip blank spec for these) */
@@ -80,6 +82,7 @@ export async function createWorkflowStructure(
 ): Promise<void> {
   const projectType = options?.projectType ?? "fullstack";
   const skipSpecTemplates = options?.skipSpecTemplates ?? false;
+  const skipConfig = options?.skipConfig ?? false;
   const packages = options?.packages;
   const remoteSpecPackages = options?.remoteSpecPackages;
 
@@ -103,11 +106,13 @@ export async function createWorkflowStructure(
     gitignoreTemplate,
   );
 
-  // Copy config.yaml from templates
-  await writeFile(
-    path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml"),
-    configYamlTemplate,
-  );
+  // Copy config.yaml from templates (skip during migration to preserve user config)
+  if (!skipConfig) {
+    await writeFile(
+      path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml"),
+      configYamlTemplate,
+    );
+  }
 
   // Create workspace/ with index.md
   ensureDir(path.join(cwd, PATHS.WORKSPACE));
