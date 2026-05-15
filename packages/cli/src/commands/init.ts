@@ -998,6 +998,22 @@ interface InitAnswers {
 
 export async function init(options: InitOptions): Promise<void> {
   const cwd = process.cwd();
+
+  // Refuse to run in $HOME unless TRELLIS_ALLOW_HOMEDIR=1 is set.
+  // Running init in $HOME would scatter platform config files across the
+  // user's home directory, which is almost certainly a mistake.
+  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? "";
+  if (homeDir && cwd === homeDir && !process.env.TRELLIS_ALLOW_HOMEDIR) {
+    console.error(
+      chalk.red(
+        "Refusing to run `rudder init` in the home directory ($HOME / %USERPROFILE%). " +
+          "This would create platform config files (.claude/, .codex/, etc.) directly in $HOME.\n" +
+          "If you really want to do this, set TRELLIS_ALLOW_HOMEDIR=1 and try again.",
+      ),
+    );
+    process.exit(1);
+  }
+
   const isFirstInit = !fs.existsSync(path.join(cwd, DIR_NAMES.WORKFLOW));
   // Captured here (before createWorkflowStructure + init_developer run) so
   // the three-branch dispatch at the bottom can tell "fresh clone joiner"

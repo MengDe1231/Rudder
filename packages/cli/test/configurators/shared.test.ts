@@ -157,7 +157,9 @@ describe("resolvePlaceholders", () => {
     it("resolves {{PYTHON_CMD}}", () => {
       const result = resolvePlaceholders("run {{PYTHON_CMD}} script.py");
       const expected =
-        process.platform === "win32" ? "run python script.py" : "run python3 script.py";
+        process.platform === "win32"
+          ? "run python -X utf8 script.py"
+          : "run python3 script.py";
       expect(result).toBe(expected);
     });
 
@@ -242,7 +244,8 @@ describe("resolvePlaceholders", () => {
         "{{PYTHON_CMD}} ./.rudder/scripts/task.py and {{CMD_REF:start}}",
         claudeCtx,
       );
-      const py = process.platform === "win32" ? "python" : "python3";
+      const py =
+        process.platform === "win32" ? "python -X utf8" : "python3";
       expect(result).toBe(
         `${py} ./.rudder/scripts/task.py and /rudder:start`,
       );
@@ -403,7 +406,8 @@ describe("resolvePlaceholders", () => {
     it("works alongside {{PYTHON_CMD}} in a realistic init-context invocation", () => {
       const input =
         '{{PYTHON_CMD}} ./.rudder/scripts/task.py init-context "$TASK_DIR" <type> --platform {{CLI_FLAG}}';
-      const py = process.platform === "win32" ? "python" : "python3";
+      const py =
+        process.platform === "win32" ? "python -X utf8" : "python3";
       expect(resolvePlaceholders(input, codexCtx)).toBe(
         `${py} ./.rudder/scripts/task.py init-context "$TASK_DIR" <type> --platform codex`,
       );
@@ -457,7 +461,8 @@ describe("resolvePlaceholdersNeutral", () => {
       "{{PYTHON_CMD}} script.py",
       claudeCtx,
     );
-    const py = process.platform === "win32" ? "python" : "python3";
+    const py =
+      process.platform === "win32" ? "python -X utf8" : "python3";
     expect(result).toBe(`${py} script.py`);
   });
 

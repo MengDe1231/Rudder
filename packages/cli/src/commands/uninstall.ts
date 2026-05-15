@@ -24,7 +24,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 
 import { DIR_NAMES } from "../constants/paths.js";
-import { loadHashes } from "../utils/template-hash.js";
+import { loadHashes, pruneOrphanManifestKeys } from "../utils/template-hash.js";
 import { cleanupEmptyDirs } from "./update.js";
 import { ALL_MANAGED_DIRS } from "../configurators/index.js";
 import {
@@ -363,6 +363,19 @@ function executePlan(
  */
 export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   const cwd = process.cwd();
+
+  // Refuse to run in $HOME unless TRELLIS_ALLOW_HOMEDIR=1 is set.
+  const homeDir = process.env.HOME ?? process.env.USERPROFILE ?? "";
+  if (homeDir && cwd === homeDir && !process.env.TRELLIS_ALLOW_HOMEDIR) {
+    console.error(
+      chalk.red(
+        "Refusing to run `rudder uninstall` in the home directory ($HOME / %USERPROFILE%). " +
+          "If you really want to do this, set TRELLIS_ALLOW_HOMEDIR=1 and try again.",
+      ),
+    );
+    process.exit(1);
+  }
+
   const rudderDir = path.join(cwd, DIR_NAMES.WORKFLOW);
 
   // Pre-check 1: must have a `.rudder/` directory.
@@ -387,6 +400,9 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
     );
     process.exit(1);
   }
+
+  // Prune stale orphan entries before planning.
+  pruneOrphanManifestKeys(cwd);
 
   const plan = buildPlan(cwd, hashes);
   renderPlan(cwd, plan);

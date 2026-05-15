@@ -117,8 +117,14 @@ export function resolvePlaceholders(
   content: string,
   context?: TemplateContext,
 ): string {
+  // On Windows, force Python to use UTF-8 encoding for stdin/stdout/stderr.
+  // This prevents hook failures on systems with non-UTF-8 default code pages.
+  const pythonCmd =
+    process.platform === "win32"
+      ? `${getPythonCommandForPlatform()} -X utf8`
+      : getPythonCommandForPlatform();
   let result = replacePythonCommandLiterals(
-    content.replace(RE_PYTHON_CMD, getPythonCommandForPlatform()),
+    content.replace(RE_PYTHON_CMD, pythonCmd),
   );
 
   if (!context) return result;
@@ -181,8 +187,12 @@ export function resolvePlaceholdersNeutral(
   content: string,
   context?: TemplateContext,
 ): string {
+  const pythonCmd =
+    process.platform === "win32"
+      ? `${getPythonCommandForPlatform()} -X utf8`
+      : getPythonCommandForPlatform();
   let result = replacePythonCommandLiterals(
-    content.replace(RE_PYTHON_CMD, getPythonCommandForPlatform()),
+    content.replace(RE_PYTHON_CMD, pythonCmd),
   );
 
   if (!context) return result;

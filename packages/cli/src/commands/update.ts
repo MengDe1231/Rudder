@@ -28,6 +28,7 @@ import {
   removeHash,
   renameHash,
   computeHash,
+  pruneOrphanManifestKeys,
 } from "../utils/template-hash.js";
 import { compareVersions } from "../utils/compare-versions.js";
 import { toPosix } from "../utils/posix.js";
@@ -1756,6 +1757,14 @@ export async function update(options: UpdateOptions): Promise<void> {
   // Load template hashes for modification detection
   const hashes = loadHashes(cwd);
   const isFirstHashTracking = Object.keys(hashes).length === 0;
+
+  // Prune stale orphan entries from the manifest before planning.
+  const pruned = pruneOrphanManifestKeys(cwd);
+  if (pruned > 0) {
+    console.log(
+      chalk.gray(`   Cleaned up ${pruned} stale manifest entr${pruned === 1 ? "y" : "ies"}.\n`),
+    );
+  }
 
   // Handle unknown version - skip regular migrations but safe-file-delete still runs
   const isUnknownVersion = projectVersion === "unknown";
