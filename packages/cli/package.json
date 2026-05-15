@@ -1,6 +1,6 @@
 {
   "name": "@mengde1231/rudder",
-  "version": "0.5.17",
+  "version": "0.5.18",
   "description": "AI capabilities grow like ivy — Rudder provides the structure to guide them along a disciplined path",
   "type": "module",
   "main": "./dist/index.js",
