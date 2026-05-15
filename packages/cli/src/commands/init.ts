@@ -49,6 +49,7 @@ import {
   type RegistryBackend,
 } from "../utils/template-fetcher.js";
 import { setupProxy, maskProxyUrl } from "../utils/proxy.js";
+import { migrateFromTrellis } from "../utils/trellis-migrate.js";
 
 const MIN_PYTHON_MAJOR = 3;
 const MIN_PYTHON_MINOR = 9;
@@ -1012,6 +1013,14 @@ export async function init(options: InitOptions): Promise<void> {
       ),
     );
     process.exit(1);
+  }
+
+  // Auto-migrate from Trellis if .trellis/ directory is detected.
+  // This renames .trellis/ → .rudder/, updates system files, cleans up
+  // old trellis-* platform files, and preserves all task records.
+  const migration = migrateFromTrellis(cwd);
+  if (migration.migrated) {
+    console.log(chalk.green(`\n⚡ Migrated from Trellis: .trellis/ → .rudder/ (${migration.taskCount} task${migration.taskCount === 1 ? "" : "s"} preserved, ${migration.platformFilesRemoved} old platform files removed)`));
   }
 
   const isFirstInit = !fs.existsSync(path.join(cwd, DIR_NAMES.WORKFLOW));
