@@ -182,12 +182,13 @@ function countTasks(rudderDir: string): number {
 }
 
 /**
- * Remove `trellis-*` prefixed skills, commands, and hooks from all
- * platform directories.
+ * Remove `trellis-` prefixed or `trellis`-named skills, commands, and hooks
+ * from all platform directories.
  *
  * These will be recreated by the normal `rudder init` flow with the
- * correct `rudder-*` prefix. We scan all known platform directories
- * (`.claude/`, `.codex/`, `.cursor/`, etc.) to ensure complete cleanup.
+ * correct `rudder-*` prefix. We recursively walk all known platform
+ * directories (`.claude/`, `.codex/`, `.cursor/`, etc.) to ensure
+ * complete cleanup, including nested subdirectories.
  */
 function cleanupPlatformFiles(cwd: string): number {
   // All known platform config directories that may contain trellis-* files.
@@ -207,27 +208,52 @@ function cleanupPlatformFiles(cwd: string): number {
     ".factory",
     ".pi",
     // Shared skills directory (may have been written by any platform).
-    ".agents/skills",
+    ".agents",
   ];
 
   let removed = 0;
 
   for (const relDir of platformDirs) {
     const absDir = path.join(cwd, relDir);
-    removed += removeTrellisPrefixedInDir(absDir);
+    if (!fs.existsSync(absDir)) continue;
+    removed += removeTrellisRecursively(absDir);
+  }
 
-    // Also check nested subdirectories (e.g., .claude/skills/, .claude/commands/).
-    if (fs.existsSync(absDir)) {
-      try {
-        const entries = fs.readdirSync(absDir, { withFileTypes: true });
-        for (const entry of entries) {
-          if (entry.isDirectory()) {
-            const nested = path.join(absDir, entry.name);
-            removed += removeTrellisPrefixedInDir(nested);
-          }
-        }
-      } catch {
-        // ignore
+  return removed;
+}
+
+/**
+ * Recursively walk a directory and remove any entry whose name starts
+ * with `trellis-` or equals `trellis` (with or without extension).
+ */
+function removeTrellisRecursively(dir: string): number {
+  if (!fs.existsSync(dir)) return 0;
+
+  let removed = 0;
+
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return 0;
+  }
+
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      // Remove if this dir is trellis-related.
+      if (isTrellisName(entry.name)) {
+        fs.rmSync(full, { recursive: true, force: true });
+        removed += 1;
+        continue;
+      }
+      // Otherwise recurse into it.
+      removed += removeTrellisRecursively(full);
+    } else if (entry.isFile()) {
+      if (isTrellisName(entry.name)) {
+        fs.unlinkSync(full);
+        removed += 1;
       }
     }
   }
@@ -236,28 +262,14 @@ function cleanupPlatformFiles(cwd: string): number {
 }
 
 /**
- * Remove all entries (files or directories) starting with `trellis-`
- * in the given directory.
+ * Check if a file or directory name is Trellis-related.
+ * Matches: trellis-*, trellis, trellis.* (with extension)
  */
-function removeTrellisPrefixedInDir(dir: string): number {
-  if (!fs.existsSync(dir)) return 0;
-
-  let removed = 0;
-  try {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.name.startsWith(TRELLIS_PREFIX)) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          fs.rmSync(full, { recursive: true, force: true });
-        } else {
-          fs.unlinkSync(full);
-        }
-        removed += 1;
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return removed;
+function isTrellisName(name: string): boolean {
+  const base = name;
+  return (
+    base.startsWith(TRELLIS_PREFIX) ||
+    base === TRELLIS_PREFIX.slice(0, -1) || // "trellis" (without hyphen)
+    base.startsWith("trellis.") // "trellis.json", "trellis.md", etc.
+  );
 }
