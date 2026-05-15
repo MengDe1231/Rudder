@@ -2,21 +2,21 @@
 <picture>
 <source srcset="assets/rudder.png" media="(prefers-color-scheme: dark)">
 <source srcset="assets/rudder.png" media="(prefers-color-scheme: light)">
-<img src="assets/rudder.png" alt="Rudder Logo" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+<img src="assets/rudder.png" alt="Rudder Logo (placeholder)" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
 </picture>
+<br/><em>Logo and official website are still in progress — design contributions welcome!</em>
 </p>
 
 <p align="center">
 <strong>The harness that makes coding agents production-ready</strong><br/>
-<sub>Start a feature in Gemini, continue in Claude Code, ship it with Codex — or hand it off to a teammate at any step. Context, specs, and standards are shared across every agent and every teammate, so anyone's best spec lifts the whole team.</sub>
+<sub>Start a feature in Gemini, continue in Claude Code, ship it with Codex — or hand it off to a teammate at any step. Context, specs, and standards are shared across every agent and every teammate.</sub>
 </p>
 
 <p align="center">
 <a href="./README_CN.md">简体中文</a> •
 <a href="https://docs.tryrudder.app/">Docs</a> •
 <a href="https://docs.tryrudder.app/start/install-and-first-task">Quick Start</a> •
-<a href="https://docs.tryrudder.app/advanced/multi-platform">Supported Platforms</a> •
-<a href="https://docs.tryrudder.app/start/real-world-scenarios">Use Cases</a>
+<a href="https://docs.tryrudder.app/advanced/multi-platform">Supported Platforms</a>
 </p>
 
 <p align="center">
@@ -25,11 +25,6 @@
 <a href="https://github.com/MengDe1231/Rudder/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/MengDe1231/Rudder/stargazers"><img src="https://img.shields.io/github/stars/MengDe1231/Rudder?style=flat-square&color=eab308" alt="stars" /></a>
 <a href="https://docs.tryrudder.app/"><img src="https://img.shields.io/badge/docs-tryrudder.app-0f766e?style=flat-square" alt="docs" /></a>
-<a href="https://discord.com/invite/tWcCZ3aRHc"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
-<a href="https://github.com/MengDe1231/Rudder/issues"><img src="https://img.shields.io/github/issues/MengDe1231/Rudder?style=flat-square&color=e67e22" alt="open issues" /></a>
-<a href="https://github.com/MengDe1231/Rudder/pulls"><img src="https://img.shields.io/github/issues-pr/MengDe1231/Rudder?style=flat-square&color=9b59b6" alt="open PRs" /></a>
-<a href="https://deepwiki.com/MengDe1231/Rudder"><img src="https://img.shields.io/badge/Ask-DeepWiki-blue?style=flat-square" alt="Ask DeepWiki" /></a>
-<a href="https://chatgpt.com/?q=Explain+the+project+MengDe1231/Rudder+on+GitHub"><img src="https://img.shields.io/badge/Ask-ChatGPT-74aa9c?style=flat-square&logo=openai&logoColor=white" alt="Ask ChatGPT" /></a>
 </p>
 
 <p align="center">
@@ -46,7 +41,7 @@
 | **Team-shared standards** | Specs live in the repo, so one person's hard-won workflow or rule can benefit the whole team. |
 | **Multi-platform setup** | Bring the same Rudder structure to 14 AI coding platforms instead of rebuilding your workflow per tool. |
 
-## Prerequisites:
+## Prerequisites
 
 - **Node.js** >= 18
 - **Python** >= 3.9
@@ -66,15 +61,6 @@ rudder init --cursor --opencode --codex -u your-name
 
 See the [Quick Start](https://docs.tryrudder.app/start/install-and-first-task) and [Supported Platforms](https://docs.tryrudder.app/advanced/multi-platform) guides for setup details.
 
-## How to Use
-
-The workflow is simple:
-
-1. **Describe what you want** in natural language.
-2. **Brainstorm** with the AI one question at a time until the PRD is clear, then implementation begins.
-3. **Let it run** — the AI calls Rudder Implement and auto-checks the result against specs, lint, type-check, and tests.
-4. **Type `/rudder:finish-work`** when the work is done or the session context fills up. Rudder archives the task and updates journals.
-
 ## How It Works
 
 Rudder runs a 4-phase loop with auto-invoked skills and sub-agents:
@@ -83,16 +69,6 @@ Rudder runs a 4-phase loop with auto-invoked skills and sub-agents:
 2. **Implement** — a `rudder-implement` sub-agent writes code from the PRD with the curated context auto-injected, no git commit.
 3. **Verify** — a `rudder-check` sub-agent reviews the diff against specs and runs lint, type-check, and tests, self-fixing where it can.
 4. **Finish** — a final check runs, then `rudder-update-spec` promotes new learnings back into `.rudder/spec/` so the next session starts smarter.
-
-## Resources
-
-| Need                            | Link                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| Install Rudder in a repo       | [Quick Start](https://docs.tryrudder.app/start/install-and-first-task)        |
-| Understand platform differences | [Supported Platforms](https://docs.tryrudder.app/advanced/multi-platform)     |
-| See the workflow in practice    | [Real-World Scenarios](https://docs.tryrudder.app/start/real-world-scenarios) |
-| Start from spec templates       | [Spec Templates](https://docs.tryrudder.app/templates/specs-index)            |
-| Track releases                  | [Changelog](https://docs.tryrudder.app/changelog)                             |
 
 ## FAQ
 
@@ -135,15 +111,9 @@ Yes. Personal workspace journals stay separate per developer, while shared specs
 
 [![Star History Chart](https://api.star-history.com/svg?repos=MengDe1231/Rudder&type=Date)](https://star-history.com/#MengDe1231/Rudder&Date)
 
-## Community & Resources
-
-- [Official Docs](https://docs.tryrudder.app/)
-- [GitHub Issues](https://github.com/MengDe1231/Rudder/issues)
-- [Discord](https://discord.com/invite/tWcCZ3aRHc)
-- [Tech Blog](https://docs.tryrudder.app/blog)
-
 <p align="center">
-<a href="https://github.com/MengDe1231/Rudder">Official Repository</a> •
-<a href="https://github.com/MengDe1231/Rudder/blob/main/LICENSE">AGPL-3.0 License</a> •
-Built by <a href="https://github.com/MengDe1231">MengDe1231</a>
+<a href="https://docs.tryrudder.app/">Docs</a> •
+<a href="https://github.com/MengDe1231/Rudder">GitHub</a> •
+<a href="https://discord.com/invite/tWcCZ3aRHc">Discord</a> •
+<a href="https://github.com/MengDe1231/Rudder/blob/main/LICENSE">AGPL-3.0 License</a>
 </p>
