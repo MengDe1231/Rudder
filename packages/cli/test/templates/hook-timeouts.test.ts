@@ -104,7 +104,7 @@ const PLATFORM_HOOK_CONFIGS = [
     schema: "flat",
     sessionStartEvent: "sessionStart",
     sessionStartTimeoutField: "timeout",
-    userPromptEvent: "beforeSubmitPrompt",
+    userPromptEvent: null, // Cursor does not support beforeSubmitPrompt (removed in v0.5.23)
     userPromptTimeoutField: "timeout",
     unit: "s",
   },
@@ -179,18 +179,20 @@ describe("hook-timeouts: default timeouts survive Windows Python cold start (iss
         });
       }
 
-      it(`${cfg.userPromptEvent} (inject-workflow-state) timeout >= ${MIN_USER_PROMPT_S}${cfg.unit}`, () => {
-        const min =
-          cfg.unit === "ms" ? MIN_USER_PROMPT_S * 1000 : MIN_USER_PROMPT_S;
-        const events = parsed.hooks?.[cfg.userPromptEvent];
-        const hooks = extractHookEntries(events, cfg.schema);
-        expect(hooks.length).toBeGreaterThan(0);
-        for (const hook of hooks) {
-          const value = hook[cfg.userPromptTimeoutField];
-          expect(typeof value).toBe("number");
-          expect(value as number).toBeGreaterThanOrEqual(min);
-        }
-      });
+      if (cfg.userPromptEvent !== null) {
+        it(`${cfg.userPromptEvent} (inject-workflow-state) timeout >= ${MIN_USER_PROMPT_S}${cfg.unit}`, () => {
+          const min =
+            cfg.unit === "ms" ? MIN_USER_PROMPT_S * 1000 : MIN_USER_PROMPT_S;
+          const events = parsed.hooks?.[cfg.userPromptEvent];
+          const hooks = extractHookEntries(events, cfg.schema);
+          expect(hooks.length).toBeGreaterThan(0);
+          for (const hook of hooks) {
+            const value = hook[cfg.userPromptTimeoutField];
+            expect(typeof value).toBe("number");
+            expect(value as number).toBeGreaterThanOrEqual(min);
+          }
+        });
+      }
     });
   }
 });

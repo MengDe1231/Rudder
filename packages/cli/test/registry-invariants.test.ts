@@ -101,11 +101,6 @@ describe("UserPromptSubmit hook wiring", () => {
       event: "UserPromptSubmit",
     },
     {
-      platform: "cursor",
-      path: "cursor/hooks.json",
-      event: "beforeSubmitPrompt",
-    },
-    {
       platform: "qoder",
       path: "qoder/settings.json",
       event: "UserPromptSubmit",
