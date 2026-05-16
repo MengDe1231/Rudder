@@ -1206,7 +1206,7 @@ Both were fixed by deleting the custom reader and routing through
 
 ```python
 # common/config.py
-DEFAULT_SESSION_AUTO_COMMIT = True
+DEFAULT_SESSION_AUTO_COMMIT = False
 
 def get_session_auto_commit(repo_root: Path | None = None) -> bool:
     config = _load_config(repo_root)
