@@ -199,7 +199,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 
 [workflow-state:in_progress]
 **Flow**: rudder-implement → rudder-check → rudder-update-spec → commit (Phase 3.4) → `/rudder:finish-work`.
-**Main-session default (no override)**: dispatch the `rudder-implement` / `rudder-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 commit (required, once): after rudder-update-spec, or whenever implementation is verifiably complete, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
+**Main-session default (no override)**: dispatch the `rudder-implement` / `rudder-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 commit (required, once): after rudder-update-spec, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `rudder-implement`, implement directly from the loaded task context and do NOT spawn another `rudder-implement`; if you are already running as `rudder-check`, review/fix directly and do NOT spawn another `rudder-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `rudder-implement` / `rudder-check` / `rudder-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `rudder-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
 **Inline override** (per-turn only, escape hatch for sub-agent dispatch): the user's CURRENT message MUST explicitly contain one of: "do it inline" / "no sub-agent" / "你直接改" / "别派 sub-agent" / "main session 写就行" / "不用 sub-agent". **Without seeing one of these phrases you must NOT inline on your own**; do not invent an override the user never said.
@@ -213,7 +213,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 [workflow-state:in_progress-inline]
 **Flow** (inline mode): main session loads `rudder-before-dev` → main session edits code → main session loads `rudder-check` → run lint / type-check / tests → fix → `rudder-update-spec` → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `rudder-implement` / `rudder-check` sub-agents. Load the `rudder-before-dev` skill before writing code; load the `rudder-check` skill before reporting completion.
-Phase 3.4 commit (required, once): after `rudder-update-spec`, or whenever implementation is verifiably complete, the main agent **drives the commit** — state the commit plan in user-facing text, then run `git commit` — BEFORE suggesting `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
+Phase 3.4 commit (required, once): after `rudder-update-spec`, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
@@ -537,6 +537,8 @@ The check agent's job:
 - Review code changes against specs
 - Auto-fix issues it finds
 - Run lint and typecheck to verify
+- Run compile/build verification (Maven: `mvn compile`, Go: `go build ./...`, etc.)
+- If compilation fails, fix errors and retry (max 3 rounds) before reporting
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
@@ -545,6 +547,7 @@ The check agent's job:
 Load the `rudder-check` skill and verify the code per its guidance:
 - Spec compliance
 - lint / type-check / tests
+- Compile/build verification (detect project type, run `mvn compile` / `go build` / `cargo check`, fix errors up to 3 rounds)
 - Cross-layer consistency (when changes span layers)
 
 If issues are found → fix → re-check, until green.
@@ -568,6 +571,7 @@ Goal: ensure code quality, capture lessons, record the work.
 Load the `rudder-check` skill and do a final verification:
 - Spec compliance
 - lint / type-check / tests
+- Compile/build verification (detect project type, run compile command, fix errors up to 3 rounds)
 - Cross-layer consistency (when changes span layers)
 
 If issues are found → fix → re-check, until green.

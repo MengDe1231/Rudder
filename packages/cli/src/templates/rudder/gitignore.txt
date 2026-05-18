@@ -32,4 +32,4 @@
 **/*.pyc
 
 # Personal tool path overrides (machine-specific, not shared)
-config.local.yaml
+config_local.yml

@@ -843,7 +843,7 @@ canonical `common/safe_commit.py` helpers. Hand-rolled `git add -A` /
 | `safe_archive_paths_to_add(repo_root)` | `templates/rudder/scripts/common/safe_commit.py:safe_archive_paths_to_add` | Path whitelist for `task.py archive` — archive subtree + sibling task dirs (so deletions get recorded) |
 | `safe_git_add(paths, repo_root)` | `templates/rudder/scripts/common/safe_commit.py:safe_git_add` | Plain `git add -- <paths>`; never `-f`. Returns `(success, used_force=False, stderr)` |
 | `print_gitignore_warning(paths)` | `templates/rudder/scripts/common/safe_commit.py:print_gitignore_warning` | Single source of truth for the "ignored by .gitignore" warning, including the AI-defense negative example |
-| `get_session_auto_commit(repo_root)` | `templates/rudder/scripts/common/config.py:get_session_auto_commit` | Reads `session_auto_commit` from `.rudder/config.yaml` (default `True`) |
+| `get_session_auto_commit(repo_root)` | `templates/rudder/scripts/common/config.py:get_session_auto_commit` | Reads `session_auto_commit` from `.rudder/config.yaml` (default `False`) |
 
 Callers using this contract: `add_session.py:_auto_commit_workspace` and
 `task_store.py:_auto_commit_archive` (invoked from `task.py archive`).
@@ -919,16 +919,19 @@ Behavior contract:
   compatibility but is always `False`. Do not introduce a code path that
   sets it to `True`.
 
-### Pattern: `session_auto_commit` config gate (added 0.5.11)
+### Pattern: config gates for `session_auto_commit` and `code_auto_commit` (added 0.5.11 / 0.5.23)
 
 ```yaml
 # .rudder/config.yaml
-# session_auto_commit: true   # default — auto-stage + auto-commit
-session_auto_commit: false    # files written, git left untouched
+session_auto_commit: false   # default — journal/archive files written, git untouched
+# code_auto_commit: false    # default — AI shows diff + commit msg, asks Y/n
 ```
 
-- `true` (default) — `add_session.py` and `task.py archive` stage + commit
-  via the helpers above.
+- `session_auto_commit`: controls `add_session.py` and `task.py archive` git behavior.
+  Default `False` — files written to disk; user manages git.
+- `code_auto_commit`: controls Phase 3.4 code commit. Default `False` — AI
+  runs `git diff --stat`, states commit message, asks for user confirmation
+  before `git commit`.
 - `false` — early-return before touching git. Files are still written; the
   user runs `git status` / `git add` / `git commit` themselves.
 - Always read via `get_session_auto_commit(repo_root)`. Do not write a custom
@@ -1207,6 +1210,7 @@ Both were fixed by deleting the custom reader and routing through
 ```python
 # common/config.py
 DEFAULT_SESSION_AUTO_COMMIT = False
+DEFAULT_CODE_AUTO_COMMIT = False
 
 def get_session_auto_commit(repo_root: Path | None = None) -> bool:
     config = _load_config(repo_root)
@@ -1219,10 +1223,18 @@ def get_session_auto_commit(repo_root: Path | None = None) -> bool:
     if s in ("false", "no", "0", "off"):
         return False
     print(
-        f"[WARN] invalid session_auto_commit value: {raw!r}; using true (default)",
+        f"[WARN] invalid session_auto_commit value: {raw!r}; using false (default)",
         file=sys.stderr,
     )
     return DEFAULT_SESSION_AUTO_COMMIT
+
+def get_code_auto_commit(repo_root: Path | None = None) -> bool:
+    config = _load_config(repo_root)
+    raw = config.get("code_auto_commit", DEFAULT_CODE_AUTO_COMMIT)
+    if isinstance(raw, bool):
+        return raw
+    s = str(raw).strip().lower()
+    return s in ("true", "yes", "1", "on")
 ```
 
 Each new key gets its own `get_<key>` accessor. The accessor owns:
@@ -1257,12 +1269,12 @@ example in `packages/cli/src/templates/rudder/config.yaml`, with:
 
 ```yaml
 # Auto-commit behavior for session journal + task archive operations.
-# - true (default): scripts auto-stage and auto-commit ...
-# - false: scripts do not touch git. Files are still written to disk; ...
+# - false (default): scripts do not touch git. Files are still written to disk; ...
+# - true: scripts auto-stage and auto-commit ...
 #
 # Accepts: true / false / yes / no / 1 / 0 / on / off (case-insensitive).
 #
-# session_auto_commit: true
+# session_auto_commit: false  # default
 ```
 
 If the key is undocumented in `config.yaml`, users discover it only by

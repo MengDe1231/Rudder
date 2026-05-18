@@ -47,11 +47,14 @@ Review checklist:
 - Check whether tests should be added or updated.
 - Check whether `.rudder/spec/` docs need sync after implementation.
 - Run lint and type-check; fix any failures.
+- Detect project type and run compile: Maven (`mvn compile -q`), Gradle (`./gradlew compileJava -q`), Go (`go build ./...`), Rust (`cargo check --all-targets`), TypeScript (`npx tsc --noEmit`), or Node.js (`npx eslint . --no-error-on-unmatched-pattern`).
+- If compilation fails, fix and retry up to 3 rounds. Parse error output, fix source code, re-run compile. Stop and report remaining errors after 3 rounds.
+- Use tool paths from the `<tool-paths>` block injected at session-start if available; otherwise fall back to system PATH.
 - Prefer concrete findings over speculative warnings.
 
 When you find an issue:
 1. Fix it directly using edit/write tools.
-2. Re-run lint and type-check until green.
+2. Re-run lint, type-check, and compile until green.
 3. Record what you changed and why.
 
 Output format:
@@ -66,9 +69,12 @@ Only list issues you could not self-fix (e.g. missing product decision, out-of-s
 ## Verification
 - Lint: pass/fail
 - TypeCheck: pass/fail
-- Tests: pass/fail (if applicable)
+- Compile: pass/fail (project: Maven/Gradle/Go/Rust/TS/JS, rounds: N)
 
-If no issues are found, say so explicitly after verifying lint/type-check pass.
+## Compile Errors (if any)
+(List unresolved compiler errors if max retry reached)
+
+If no issues are found, say so explicitly after verifying lint/type-check/compile pass.
 """
 
 # Disable Codex collab tools entirely for this sub-agent. With both

@@ -1,0 +1,17 @@
+# Local tool path overrides (machine-specific, not shared with team).
+# This file is gitignored — see .rudder/.gitignore.
+#
+# When the AI detects a missing tool or wrong version during session-start,
+# it will uncomment and fill in the correct absolute path for your machine.
+#
+# tools:
+#   java:
+#     path: "/path/to/your/java/bin/java"
+#   mvn:
+#     path: "/path/to/your/maven/bin/mvn"
+#   node:
+#     path: "/path/to/your/node/bin/node"
+#   go:
+#     path: "/path/to/your/go/bin/go"
+#   python:
+#     path: "/path/to/your/python/bin/python"
