@@ -38,7 +38,24 @@ Rudder fixes that. **Your specs, memory, and task state all live in the repo. Ev
 
 ## Supported Platforms
 
-Claude Code · Cursor · Gemini · Codex · OpenCode · CodeBuddy · Qoder · Kiro · Droid · Pi · Windsurf · Copilot · Antigravity · Kilo
+14 AI coding platforms, one setup. Pick what you use:
+
+| Agent | IDE / Platform |
+| --- | --- |
+| Claude Code | CLI, VS Code, JetBrains, Web |
+| Gemini | Gemini CLI |
+| Cursor | Cursor IDE |
+| Codex | VS Code |
+| OpenCode | OpenCode IDE |
+| CodeBuddy | CodeBuddy IDE |
+| Qoder | Qoder IDE |
+| Kiro | Kiro IDE |
+| Pi | Pi CLI |
+| Windsurf | Windsurf IDE |
+| Copilot | VS Code, JetBrains |
+| Antigravity | Antigravity CLI |
+| Kilo | Kilo CLI |
+| Droid | Factory IDE |
 
 ## What you need
 
