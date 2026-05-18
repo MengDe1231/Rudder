@@ -27,10 +27,6 @@
 <a href="https://docs.tryrudder.app/zh"><img src="https://img.shields.io/badge/docs-tryrudder.app-0f766e?style=flat-square" alt="docs" /></a>
 </p>
 
-<p align="center">
-<img src="assets/rudder-demo-zh.gif" alt="Rudder 工作流演示" width="100%">
-</p>
-
 ## 解决了什么痛点？
 
 用过 AI 写代码的都懂 —— 每次新会话打开，AI 就像喝了孟婆汤，一切从头来。
