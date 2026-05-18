@@ -27,10 +27,6 @@
 <a href="https://docs.tryrudder.app/"><img src="https://img.shields.io/badge/docs-tryrudder.app-0f766e?style=flat-square" alt="docs" /></a>
 </p>
 
-<p align="center">
-<img src="assets/rudder-demo.gif" alt="Rudder workflow demo" width="100%">
-</p>
-
 ## What problem does this solve?
 
 If you've used AI for coding, you know the drill: every new session the assistant has no idea about your project. You explain the same things over and over.
