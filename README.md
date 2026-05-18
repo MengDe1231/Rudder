@@ -1,10 +1,9 @@
 <p align="center">
 <picture>
-<source srcset="assets/rudder.png" media="(prefers-color-scheme: dark)">
-<source srcset="assets/rudder.png" media="(prefers-color-scheme: light)">
-<img src="assets/rudder.png" alt="Rudder Logo (placeholder)" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+<source srcset="assets/rudder-logo.png" media="(prefers-color-scheme: dark)">
+<source srcset="assets/rudder-logo.png" media="(prefers-color-scheme: light)">
+<img src="assets/rudder-logo.png" alt="Rudder Logo" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
 </picture>
-<br/><em>Logo and official site still in the works — design contributions welcome!</em>
 </p>
 
 <p align="center">
