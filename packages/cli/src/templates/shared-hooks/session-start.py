@@ -504,6 +504,8 @@ def _build_tool_paths_block(rudder_dir: Path) -> str:
         if version:
             parts.append(f"(required version: {version})")
         lines.append(f"- {name}: {' '.join(parts)}")
+    lines.append("")
+    lines.append("If a tool is missing or the path is wrong, locate the correct path and update `.rudder/config_local.yml`.")
     lines.append("</tool-paths>")
     return "\n".join(lines)
 
