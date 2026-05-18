@@ -7,6 +7,7 @@ import { copyRudderDir } from "../templates/extract.js";
 import {
   workflowMdTemplate,
   configYamlTemplate,
+  configLocalYmlTemplate,
   gitignoreTemplate,
 } from "../templates/rudder/index.js";
 
@@ -112,6 +113,16 @@ export async function createWorkflowStructure(
       path.join(cwd, DIR_NAMES.WORKFLOW, "config.yaml"),
       configYamlTemplate,
     );
+  }
+
+  // Copy config_local.yml (personal tool path overrides, gitignored)
+  // Only create if not already present — never overwrite user's local config
+  const localConfigPath = path.join(cwd, DIR_NAMES.WORKFLOW, "config_local.yml");
+  if (!skipConfig) {
+    const { existsSync } = await import("node:fs");
+    if (!existsSync(localConfigPath)) {
+      await writeFile(localConfigPath, configLocalYmlTemplate);
+    }
   }
 
   // Create workspace/ with index.md

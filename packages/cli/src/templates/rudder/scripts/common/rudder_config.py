@@ -153,12 +153,13 @@ def resolve_tools(repo_root: Optional[Path] = None) -> dict[str, dict]:
     """Merge tools from config.yaml with local path overrides.
 
     config_local.yml wins on path; config.yaml declares what tools are needed.
+    Tools only in config_local.yml (discovered by AI during sessions) are also included.
     """
     root = repo_root or Path.cwd()
     config = read_rudder_config(root)
     tools = config.get("tools")
     if not isinstance(tools, dict):
-        return {}
+        tools = {}
 
     local = _load_local_config(root)
     local_tools = local.get("tools")
@@ -175,6 +176,11 @@ def resolve_tools(repo_root: Optional[Path] = None) -> dict[str, dict]:
             for k, v in overrides[name].items():
                 merged[k] = v
         result[name] = merged
+
+    # Include tools only in config_local.yml (AI-discovered)
+    for name, cfg in overrides.items():
+        if name not in result:
+            result[name] = cfg
 
     return result
 

@@ -491,6 +491,7 @@ def resolve_tools(repo_root: Path | None = None) -> dict[str, dict]:
     """Merge tools from config.yaml with local path overrides from config_local.yml.
 
     config_local.yml wins on path; config.yaml declares what tools are needed.
+    Tools only in config_local.yml (discovered by AI during sessions) are also included.
     Returns dict like:
         {
             "java": {"path": "/usr/.../java", "version": "21"},
@@ -503,7 +504,7 @@ def resolve_tools(repo_root: Path | None = None) -> dict[str, dict]:
     config = _load_config(root)
     tools = config.get("tools")
     if not isinstance(tools, dict):
-        return {}
+        tools = {}
 
     # Read personal overrides from config_local.yml
     local = _load_local_config(root)
@@ -522,5 +523,10 @@ def resolve_tools(repo_root: Path | None = None) -> dict[str, dict]:
             for k, v in local_overrides[name].items():
                 merged[k] = v
         result[name] = merged
+
+    # Include tools only in config_local.yml (AI-discovered)
+    for name, cfg in local_overrides.items():
+        if name not in result:
+            result[name] = cfg
 
     return result

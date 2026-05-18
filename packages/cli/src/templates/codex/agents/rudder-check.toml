@@ -50,6 +50,7 @@ Review checklist:
 - Detect project type and run compile: Maven (`mvn compile -q`), Gradle (`./gradlew compileJava -q`), Go (`go build ./...`), Rust (`cargo check --all-targets`), TypeScript (`npx tsc --noEmit`), or Node.js (`npx eslint . --no-error-on-unmatched-pattern`).
 - If compilation fails, fix and retry up to 3 rounds. Parse error output, fix source code, re-run compile. Stop and report remaining errors after 3 rounds.
 - Use tool paths from the `<tool-paths>` block injected at session-start if available; otherwise fall back to system PATH.
+- If a required tool is not found or the path is wrong, locate the correct path (e.g., `which mvn`, `where java`) and update `.rudder/config_local.yml` so future sessions can use it directly.
 - Prefer concrete findings over speculative warnings.
 
 When you find an issue:

@@ -92,6 +92,8 @@ Detect the project type and run the appropriate compile command:
 
 **Tool path resolution**: Use the paths from the `<tool-paths>` block injected at session-start (e.g., `<tool-paths> - java: /path/to/java </tool-paths>`). If a tool's absolute path is listed there, use it; otherwise fall back to the system PATH.
 
+**Tool path discovery**: If a required tool is not found or the path is wrong, locate the correct path (e.g., `which mvn`, `where java`) and update `.rudder/config_local.yml` so future sessions can use it directly.
+
 #### Step 4c: Compile-Fix Retry Loop
 
 If compilation fails, enter a fix loop (max 3 rounds):
