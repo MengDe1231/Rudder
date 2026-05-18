@@ -4,12 +4,12 @@
 <source srcset="assets/rudder.png" media="(prefers-color-scheme: light)">
 <img src="assets/rudder.png" alt="Rudder Logo (占位图)" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
 </picture>
-<br/><em>Logo 和官方网站仍在建设中，欢迎贡献设计！</em>
+<br/><em>Logo 和官网还在搓，欢迎来贡献设计！</em>
 </p>
 
 <p align="center">
-<strong>让 AI Agent 真正具备生产力的 Coding Harness</strong><br/>
-<sub>用 Gemini 写前端，Claude Code 写后端，Codex 代码审查，或者交给团队接力开发 —— Rudder 将上下文、规范与标准在所有平台和团队内部之间共享，任何人的最佳实践都能提升整个团队的能力。</sub>
+<strong>让 AI 帮你写代码？先让它读懂你的项目。</strong><br/>
+<sub>Gemini 写前端、Claude Code 写后端、Codex 审查 —— 换个平台不用从头解释，队友接手也不用写八页文档。Rudder 把规范、记忆和任务上下文全部沉淀到仓库里，谁接手都一样丝滑。</sub>
 </p>
 
 <p align="center">
@@ -31,17 +31,21 @@
 <img src="assets/rudder-demo-zh.gif" alt="Rudder 工作流演示" width="100%">
 </p>
 
-## 为什么用 Rudder？
+## 解决了什么痛点？
+
+用过 AI 写代码的都懂 —— 每次新会话打开，AI 就像喝了孟婆汤，一切从头来。
+
+Rudder 做的事很简单：**把你的项目规范、记忆、任务状态全部落盘到仓库里，每次会话自动按需注入，AI 不再"失忆"。**
 
 | 能力 | 带来的改变 |
 | --- | --- |
-| **自动注入规范** | 将规范沉淀到 `.rudder/spec/` 之后，Rudder 会在每次会话中按当前任务自动按需注入相关上下文，无需反复说明。 |
-| **任务驱动工作流** | PRD、实现上下文、审查上下文与任务状态统一存放于 `.rudder/tasks/`，AI 开发过程保持结构化、可追溯。 |
-| **项目记忆** | `.rudder/workspace/` 中的工作日志（journal）会保留上一次会话的脉络，因此每次新会话都能基于真实上下文开始。 |
-| **团队共享标准** | Spec 随仓库一同版本化，个人总结出的规则与流程可以直接成为整个团队的基础设施。 |
-| **多平台复用** | 同一套 Rudder 结构覆盖 14 个 AI coding 平台，无需为每个工具单独搭建工作流。 |
+| **自动注入规范** | 规范写好一次放 `.rudder/spec/` 里，Rudder 会根据当前任务自动把相关文件塞给 AI，不用每次会话都重新解释。 |
+| **任务驱动** | PRD、实现记录、审查上下文全在 `.rudder/tasks/` 里，AI 不是瞎写一通完事就走。 |
+| **项目记忆** | `.rudder/workspace/` 工作日志帮你续上回话的上下文，新会话一上来就知道昨天干了啥。 |
+| **团队共享** | 规范跟着代码一起走 git 版本管理，一个人总结出的最佳实践，全团队直接用。 |
+| **14 个平台通用** | 同一套 Rudder 结构，随便切 Claude Code / Gemini / Cursor / Codex，不用每个工具都重新搭。 |
 
-## 前置要求
+## 跑起来要啥
 
 - **Node.js** >= 18
 - **Python** >= 3.9
@@ -49,61 +53,61 @@
 ## 快速开始
 
 ```bash
-# 1. 安装 Rudder
+# 1. 装
 npm install -g @mengde1231/rudder@latest
 
-# 2. 在仓库中初始化
+# 2. 初始化（全平台）
 rudder init -u your-name
 
-# 3. 或仅初始化你实际使用的平台
+# 3. 或者只初始化你用的平台（推荐，干净）
 rudder init --cursor --opencode --codex -u your-name
 ```
 
-查看 [快速开始](https://docs.tryrudder.app/zh/start/install-and-first-task) 与 [支持平台](https://docs.tryrudder.app/zh/advanced/multi-platform) 指南以了解详细配置步骤。
+详细玩法看 [快速开始](https://docs.tryrudder.app/zh/start/install-and-first-task) 和 [支持平台](https://docs.tryrudder.app/zh/advanced/multi-platform) 指南。
 
-## 工作原理
+## 工作流程
 
-Rudder 内部运行一个 4 阶段循环，skill 与子代理均由系统自动调用：
+Rudder 每次会话自动跑 4 个阶段：
 
-1. **Plan（规划）** —— `rudder-brainstorm` 逐题梳理需求并写入 `prd.md`；涉及资料调研的部分派发给 `rudder-research` 子代理处理。阶段产出为一组精选的 Spec 与研究文件，由 `implement.jsonl` / `check.jsonl` 编排。
-2. **Implement（实现）** —— `rudder-implement` 子代理依据 PRD 编写代码，所需上下文已按 `implement.jsonl` 自动注入，不会执行 git commit。
-3. **Verify（验证）** —— `rudder-check` 子代理基于 diff 对照 Spec 逐项核查，并运行 lint、type-check 与测试，在能力范围内自动修复。
-4. **Finish（收尾）** —— 执行最终检查后，`rudder-update-spec` 将本轮新增的认知沉淀回 `.rudder/spec/`，为下一次会话积累上下文。
+1. **Plan（规划）** — `rudder-brainstorm` 一问一答捋清需求，写进 `prd.md`；需要调研的部分派 `rudder-research` 子代理去查。最后产出精选的 Spec + 研究文件清单，通过 `implement.jsonl` / `check.jsonl` 编排给后面的步骤用。
+2. **Implement（实现）** — `rudder-implement` 子代理按 PRD 写代码，上下文已经自动注入。这步不碰 git commit。
+3. **Verify（验证）** — `rudder-check` 子代理对着 spec 逐项审查，跑 lint、type-check、编译和测试，能修的修，修不了的报给你。
+4. **Finish（收尾）** — `rudder-update-spec` 把这轮学到的新认知沉淀回 `.rudder/spec/`，下次会话开局就聪明了。
 
-## 常见问题
+## FAQ
 
 <details>
-<summary><strong>Rudder 与 <code>CLAUDE.md</code>、<code>AGENTS.md</code>、<code>.cursorrules</code> 有何区别？</strong></summary>
+<summary><strong>这玩意儿跟 <code>CLAUDE.md</code> / <code>AGENTS.md</code> / <code>.cursorrules</code> 有啥区别？</strong></summary>
 
-这些文件本身是有用的入口，但容易在长期使用中变得冗长臃肿。Rudder 在此之上补充了：作用域明确的 Spec、按任务划分的 PRD、工作流关卡、工作区记忆，以及按平台自动生成的适配文件。
+这些文件确实有用，但用久了都会变成几千行的缝合怪。Rudder 做了分层：规范按作用域拆分、任务有独立 PRD、工作流有关卡控制、跨平台自动适配。一句话：**不把所有东西塞进一个文件里。**
 
 </details>
 
 <details>
-<summary><strong>Rudder 是否仅支持 Claude Code？</strong></summary>
+<summary><strong>Rudder 是不是只支持 Claude Code？</strong></summary>
 
-并非如此。Rudder 是项目层基础设施，可在多种 coding agent 与 IDE 中使用。
-
-</details>
-
-<details>
-<summary><strong>Rudder 适合个人开发者还是团队？</strong></summary>
-
-两者皆可。个人开发者主要受益于记忆机制与可复用的工作流；团队使用收益更大——标准统一、任务边界清晰、上下文可审查，且具备跨平台可移植性。
+不是。Rudder 是项目层的基础设施，14 个 AI coding 平台都能用。你可以今天用 Gemini 写前端，明天切 Claude Code 写后端，后天让 Codex 审查。
 
 </details>
 
 <details>
-<summary><strong>是否需要手动编写每一个 Spec 文件？</strong></summary>
+<summary><strong>适合一个人用还是团队？</strong></summary>
 
-并不需要。多数团队的做法是先由 AI 基于现有代码生成初稿，再人工收紧关键规则。Rudder 的效果取决于是否将高价值规则显式化并纳入版本管理。
+都行。一个人用主要是项目记忆 + 可复用流程；团队用收益更大 —— 标准统一、任务边界清晰、上下文可审查，换平台不换脑子。
 
 </details>
 
 <details>
-<summary><strong>团队协作时是否会频繁产生冲突？</strong></summary>
+<summary><strong>Spec 文件是不是得手动一个一个写？</strong></summary>
 
-不会。个人工作区的 journal 按开发者独立维护，共享的 Spec 与任务则进入仓库，可以像其他项目产物一样进行评审与改进。
+不用。大多数团队的做法是让 AI 先基于现有代码生成初稿，然后人工收紧关键规则。Rudder 的核心思想是：把高价值的规则显式化、版本化，剩下的让 AI 自己搞定。
+
+</details>
+
+<details>
+<summary><strong>团队协作会不会经常冲突？</strong></summary>
+
+不会。个人工作区的 journal 是每个开发者独立维护的，共享的 Spec 和任务进仓库走 git —— 跟其他项目代码一样，冲突就合并不就完了。
 
 </details>
 
