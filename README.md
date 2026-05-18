@@ -12,10 +12,7 @@
 </p>
 
 <p align="center">
-<a href="./README_CN.md">简体中文</a> •
-<a href="https://docs.tryrudder.app/">Docs</a> •
-<a href="https://docs.tryrudder.app/start/install-and-first-task">Quick Start</a> •
-<a href="https://docs.tryrudder.app/advanced/multi-platform">Supported Platforms</a>
+<a href="./README_CN.md">简体中文</a>
 </p>
 
 <p align="center">
@@ -23,7 +20,6 @@
 <a href="https://www.npmjs.com/package/@mengde1231/rudder"><img src="https://img.shields.io/npm/dw/@mengde1231/rudder?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
 <a href="https://github.com/MengDe1231/Rudder/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/MengDe1231/Rudder/stargazers"><img src="https://img.shields.io/github/stars/MengDe1231/Rudder?style=flat-square&color=eab308" alt="stars" /></a>
-<a href="https://docs.tryrudder.app/"><img src="https://img.shields.io/badge/docs-tryrudder.app-0f766e?style=flat-square" alt="docs" /></a>
 </p>
 
 ## What problem does this solve?
@@ -38,7 +34,11 @@ Rudder fixes that. **Your specs, memory, and task state all live in the repo. Ev
 | **Task-centered flow** | PRDs, implementation records, and review context all live in `.rudder/tasks/`. AI work stays structured, not scattered across chat history. |
 | **Project memory** | `.rudder/workspace/` journals carry forward what happened last time. New session? It knows where you left off. |
 | **Team-shared standards** | Specs version-control with your code. One person figures out a good pattern, everyone gets it for free. |
-| **14 platforms, one setup** | Same Rudder structure on Claude Code, Gemini, Cursor, Codex, and more. Switch tools, keep your workflow. |
+| **14 platforms, one setup** | Same Rudder structure everywhere. Switch tools, keep your workflow. |
+
+## Supported Platforms
+
+Claude Code · Cursor · Gemini · Codex · OpenCode · CodeBuddy · Qoder · Kiro · Droid · Pi · Windsurf · Copilot · Antigravity · Kilo
 
 ## What you need
 
@@ -57,8 +57,6 @@ rudder init -u your-name
 # 3. Or just the ones you actually use (cleaner)
 rudder init --cursor --opencode --codex -u your-name
 ```
-
-Check out the [Quick Start](https://docs.tryrudder.app/start/install-and-first-task) and [Supported Platforms](https://docs.tryrudder.app/advanced/multi-platform) guides for more.
 
 ## How it works
 
@@ -111,7 +109,6 @@ Nah. Personal workspace journals are per-developer. Shared specs and tasks go th
 [![Star History Chart](https://api.star-history.com/svg?repos=MengDe1231/Rudder&type=Date)](https://star-history.com/#MengDe1231/Rudder&Date)
 
 <p align="center">
-<a href="https://docs.tryrudder.app/">Docs</a> •
 <a href="https://github.com/MengDe1231/Rudder">GitHub</a> •
 <a href="https://discord.com/invite/tWcCZ3aRHc">Discord</a> •
 <a href="https://github.com/MengDe1231/Rudder/blob/main/LICENSE">AGPL-3.0 License</a>
