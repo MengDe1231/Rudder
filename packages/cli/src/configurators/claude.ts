@@ -30,9 +30,7 @@ function shouldExclude(filename: string): boolean {
   return false;
 }
 
-/**
- * Recursively copy directory, excluding build artifacts and the commands/ dir
- * (commands are now written from common templates).
+/** from common templates).
  */
 async function copyDirFiltered(
   src: string,

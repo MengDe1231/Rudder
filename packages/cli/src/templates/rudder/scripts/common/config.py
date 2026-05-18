@@ -166,7 +166,8 @@ def _next_content_line(lines: list[str], start: int) -> tuple[int, str]:
 # Defaults
 DEFAULT_SESSION_COMMIT_MESSAGE = "chore: record journal"
 DEFAULT_MAX_JOURNAL_LINES = 2000
-DEFAULT_SESSION_AUTO_COMMIT = True
+DEFAULT_SESSION_AUTO_COMMIT = False  # journal / task archive auto-commit
+DEFAULT_CODE_AUTO_COMMIT = False     # Phase 3.4 code commit
 
 CONFIG_FILE = "config.yaml"
 
@@ -218,10 +219,10 @@ def get_session_auto_commit(repo_root: Path | None = None) -> bool:
     Governs both ``add_session.py:_auto_commit_workspace`` and
     ``task_store.py:_auto_commit_archive``.
 
-    Default: ``True`` (existing behavior — auto-stage + auto-commit).
-    Set ``session_auto_commit: false`` in ``.rudder/config.yaml`` to skip
-    auto-staging entirely; the journal/archive files are still written to
-    disk, but the user manages ``git add`` / ``git commit`` themselves.
+    Default: ``False`` — files are written to disk; the user manages
+    ``git add`` / ``git commit`` themselves.
+    Set ``session_auto_commit: true`` in ``.rudder/config.yaml`` to re-enable
+    auto-staging.
 
     Accepts native YAML booleans (``true`` / ``false``) and the string
     aliases ``true / false / yes / no / 1 / 0 / on / off`` (case-insensitive).
@@ -237,10 +238,33 @@ def get_session_auto_commit(repo_root: Path | None = None) -> bool:
     if s in ("false", "no", "0", "off"):
         return False
     print(
-        f"[WARN] invalid session_auto_commit value: {raw!r}; using true (default)",
+        f"[WARN] invalid session_auto_commit value: {raw!r}; using false (default)",
         file=sys.stderr,
     )
     return DEFAULT_SESSION_AUTO_COMMIT
+
+
+def get_code_auto_commit(repo_root: Path | None = None) -> bool:
+    """Whether Phase 3.4 should auto-commit code without user confirmation.
+
+    Default: ``False`` — AI shows ``git diff --stat``, states commit message,
+    and asks for user confirmation (Y/n) before committing.
+    Set ``code_auto_commit: true`` to skip the confirmation step.
+
+    Accepts native YAML booleans and the string aliases
+    ``true / false / yes / no / 1 / 0 / on / off`` (case-insensitive).
+    Invalid values fall back to ``False``.
+    """
+    config = _load_config(repo_root)
+    raw = config.get("code_auto_commit", DEFAULT_CODE_AUTO_COMMIT)
+    if isinstance(raw, bool):
+        return raw
+    s = str(raw).strip().lower()
+    if s in ("true", "yes", "1", "on"):
+        return True
+    if s in ("false", "no", "0", "off"):
+        return False
+    return DEFAULT_CODE_AUTO_COMMIT
 
 
 def get_hooks(event: str, repo_root: Path | None = None) -> list[str]:
@@ -449,11 +473,11 @@ def get_spec_scope(repo_root: Path | None = None) -> list[str] | str | None:
 # Tool Path Configuration
 # =============================================================================
 
-LOCAL_CONFIG_FILE = "config.local.yaml"
+LOCAL_CONFIG_FILE = "config_local.yml"
 
 
 def _load_local_config(repo_root: Path | None = None) -> dict:
-    """Load .rudder/config.local.yaml (personal overrides). Returns {} on missing."""
+    """Load .rudder/config_local.yml (personal overrides). Returns {} on missing."""
     root = repo_root or get_repo_root()
     local_config_file = root / DIR_WORKFLOW / LOCAL_CONFIG_FILE
     try:
@@ -464,9 +488,9 @@ def _load_local_config(repo_root: Path | None = None) -> dict:
 
 
 def resolve_tools(repo_root: Path | None = None) -> dict[str, dict]:
-    """Merge tools from config.yaml with local path overrides from config.local.yaml.
+    """Merge tools from config.yaml with local path overrides from config_local.yml.
 
-    config.local.yaml wins on path; config.yaml declares what tools are needed.
+    config_local.yml wins on path; config.yaml declares what tools are needed.
     Returns dict like:
         {
             "java": {"path": "/usr/.../java", "version": "21"},
@@ -481,7 +505,7 @@ def resolve_tools(repo_root: Path | None = None) -> dict[str, dict]:
     if not isinstance(tools, dict):
         return {}
 
-    # Read personal overrides from config.local.yaml
+    # Read personal overrides from config_local.yml
     local = _load_local_config(root)
     local_tools = local.get("tools")
     local_overrides: dict[str, dict] = {}

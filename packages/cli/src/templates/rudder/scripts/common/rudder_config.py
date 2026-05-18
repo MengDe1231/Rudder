@@ -135,11 +135,11 @@ def read_rudder_config(repo_root: Optional[Path] = None) -> dict:
 # Tool Path Configuration (mirrors config.py for hook usage)
 # =============================================================================
 
-LOCAL_CONFIG_FILE = "config.local.yaml"
+LOCAL_CONFIG_FILE = "config_local.yml"
 
 
 def _load_local_config(repo_root: Optional[Path] = None) -> dict:
-    """Load .rudder/config.local.yaml (personal overrides). Returns {} on missing."""
+    """Load .rudder/config_local.yml (personal overrides). Returns {} on missing."""
     root = repo_root or Path.cwd()
     local_config_file = root / ".rudder" / LOCAL_CONFIG_FILE
     try:
@@ -152,7 +152,7 @@ def _load_local_config(repo_root: Optional[Path] = None) -> dict:
 def resolve_tools(repo_root: Optional[Path] = None) -> dict[str, dict]:
     """Merge tools from config.yaml with local path overrides.
 
-    config.local.yaml wins on path; config.yaml declares what tools are needed.
+    config_local.yml wins on path; config.yaml declares what tools are needed.
     """
     root = repo_root or Path.cwd()
     config = read_rudder_config(root)
@@ -177,3 +177,19 @@ def resolve_tools(repo_root: Optional[Path] = None) -> dict[str, dict]:
         result[name] = merged
 
     return result
+
+
+def get_code_auto_commit(repo_root: Optional[Path] = None) -> bool:
+    """Whether Phase 3.4 should auto-commit code without user confirmation.
+
+    Default: False — AI shows changes, states commit message, and asks
+    for user confirmation (Y/n) before committing.
+    Set ``code_auto_commit: true`` to skip the confirmation step.
+    """
+    root = repo_root or Path.cwd()
+    config = read_rudder_config(root)
+    raw = config.get("code_auto_commit", False)
+    if isinstance(raw, bool):
+        return raw
+    s = str(raw).strip().lower()
+    return s in ("true", "yes", "1", "on")

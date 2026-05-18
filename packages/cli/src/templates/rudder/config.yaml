@@ -30,7 +30,20 @@ max_journal_lines: 2000
 #
 # Accepts: true / false / yes / no / 1 / 0 / on / off (case-insensitive).
 #
-# session_auto_commit: true
+# session_auto_commit: false
+
+#-------------------------------------------------------------------------------
+# Code Auto-Commit (Phase 3.4)
+#-------------------------------------------------------------------------------
+
+# Whether the AI should auto-commit code after implementation without asking.
+# - false (default): AI runs ``git diff --stat``, states the commit message,
+#   then asks for user confirmation (Y/n) before running ``git commit``.
+# - true: AI commits directly without prompting.
+#
+# Accepts: true / false / yes / no / 1 / 0 / on / off (case-insensitive).
+#
+# code_auto_commit: false
 
 #-------------------------------------------------------------------------------
 # Task Lifecycle Hooks
@@ -93,7 +106,7 @@ max_journal_lines: 2000
 # Tool Path Configuration
 #-------------------------------------------------------------------------------
 # Declare tools your project requires. Rudder will:
-# 1. Check config.local.yaml for machine-specific absolute paths
+# 1. Check config_local.yml for machine-specific absolute paths
 # 2. Auto-detect from version files (.sdkmanrc, .nvmrc, .tool-versions, etc.)
 # 3. Fall back to searching PATH
 #
@@ -110,7 +123,7 @@ max_journal_lines: 2000
 #   mvn:
 #     version: "3.9"
 #
-# Personal overrides (.rudder/config.local.yaml — gitignored):
+# Personal overrides (.rudder/config_local.yml — gitignored):
 # tools:
 #   java:
 #     path: "/usr/local/sdkman/candidates/java/21.0.2-open/bin/java"
