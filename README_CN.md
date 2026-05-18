@@ -1,10 +1,9 @@
 <p align="center">
 <picture>
-<source srcset="assets/rudder.png" media="(prefers-color-scheme: dark)">
-<source srcset="assets/rudder.png" media="(prefers-color-scheme: light)">
-<img src="assets/rudder.png" alt="Rudder Logo (占位图)" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
+<source srcset="assets/rudder-logo.png" media="(prefers-color-scheme: dark)">
+<source srcset="assets/rudder-logo.png" media="(prefers-color-scheme: light)">
+<img src="assets/rudder-logo.png" alt="Rudder Logo" width="500" style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;">
 </picture>
-<br/><em>Logo 和官网还在搓，欢迎来贡献设计！</em>
 </p>
 
 <p align="center">
