@@ -131,6 +131,8 @@ Rudder draws from many open-source projects, and I grew up learning from the ope
 
 One person can only do so much, but every pit I fall into will be filled. Hope it helps you who are using AI to write code.
 
+> 📖 Rudder's online documentation and user manual are being gradually improved. Stay tuned.
+
 ## Acknowledgments
 
 Rudder wouldn't exist without the open-source coding agent community. We studied how many projects solve the same problems — context injection, workflow gates, multi-platform support — and built the version we wished we had.
