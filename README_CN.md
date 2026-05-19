@@ -121,6 +121,10 @@ Rudder 每次会话自动跑 4 个阶段：
 
 </details>
 
+## 致谢
+
+Rudder 的诞生离不开开源 AI coding 社区。我们研究了社区里众多项目如何解决上下文注入、工作流关卡、跨平台支持这些老问题，然后做了我们理想中该有的样子。
+
 ## Star 历史
 
 [![Star History Chart](https://api.star-history.com/svg?repos=MengDe1231/Rudder&type=Date)](https://star-history.com/#MengDe1231/Rudder&Date)
