@@ -58,6 +58,9 @@ export interface WorkflowOptions {
   skipSpecTemplates?: boolean;
   /** Skip overwriting config.yaml (preserve user customizations during migration) */
   skipConfig?: boolean;
+  /** Skip writing config_local.yml — used during platform configure to avoid
+   * polluting test filesystems with workflow files that aren't platform templates. */
+  skipLocalConfig?: boolean;
   /** Detected monorepo packages (enables monorepo spec creation) */
   packages?: DetectedPackage[];
   /** Package names that use remote templates (skip blank spec for these) */
@@ -84,6 +87,7 @@ export async function createWorkflowStructure(
   const projectType = options?.projectType ?? "fullstack";
   const skipSpecTemplates = options?.skipSpecTemplates ?? false;
   const skipConfig = options?.skipConfig ?? false;
+  const skipLocalConfig = options?.skipLocalConfig ?? false;
   const packages = options?.packages;
   const remoteSpecPackages = options?.remoteSpecPackages;
 
@@ -116,9 +120,11 @@ export async function createWorkflowStructure(
   }
 
   // Copy config_local.yml (personal tool path overrides, gitignored)
-  // Only create if not already present — never overwrite user's local config
+  // Only create if not already present — never overwrite user's local config.
+  // Skipped during platform configure (skipLocalConfig=true) so test assertions
+  // comparing collectPlatformTemplates vs actual files stay in sync.
   const localConfigPath = path.join(cwd, DIR_NAMES.WORKFLOW, "config_local.yml");
-  if (!skipConfig) {
+  if (!skipConfig && !skipLocalConfig) {
     const { existsSync } = await import("node:fs");
     if (!existsSync(localConfigPath)) {
       await writeFile(localConfigPath, configLocalYmlTemplate);
