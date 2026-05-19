@@ -121,6 +121,16 @@ Nah. Personal workspace journals are per-developer. Shared specs and tasks go th
 
 </details>
 
+## A Note from the Author
+
+**Why does the version start at 0.5?**
+
+The version numbers aren't skipped — I iterated locally for many rounds before publishing. Rudder was born in May (the 5th month), so the major version is 0.5, with the first public release at 0.5.30.
+
+Rudder draws from many open-source projects, and I grew up learning from the open-source community. But open-source covers a broad set of use cases — most of them aren't battle-tested in real production workflows. As a Java full-stack developer, I use Rudder daily myself and keep iterating on it. That makes it relatively more friendly to Java full-stack engineers — the Java spec templates are also being actively updated. That said, every other language works just as well — Rudder itself is completely platform-agnostic.
+
+One person can only do so much, but every pit I fall into will be filled. Hope it helps you who are using AI to write code.
+
 ## Acknowledgments
 
 Rudder wouldn't exist without the open-source coding agent community. We studied how many projects solve the same problems — context injection, workflow gates, multi-platform support — and built the version we wished we had.
