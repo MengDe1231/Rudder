@@ -121,6 +121,10 @@ Nah. Personal workspace journals are per-developer. Shared specs and tasks go th
 
 </details>
 
+## Acknowledgments
+
+Rudder wouldn't exist without the open-source coding agent community. We studied how many projects solve the same problems — context injection, workflow gates, multi-platform support — and built the version we wished we had.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=MengDe1231/Rudder&type=Date)](https://star-history.com/#MengDe1231/Rudder&Date)
