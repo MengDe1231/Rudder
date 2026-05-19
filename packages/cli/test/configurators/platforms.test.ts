@@ -341,9 +341,9 @@ describe("configurePlatform", () => {
     const content = fs.readFileSync(hooksPath, "utf-8");
     const expectedPythonCmd =
       process.platform === "win32" ? "python" : "python3";
-    expect(content).toContain(
-      `"command": "${expectedPythonCmd} .codex/hooks/inject-workflow-state.py"`,
-    );
+    // Command may include `-X utf8` flag on Windows for encoding safety
+    expect(content).toContain(`.codex/hooks/inject-workflow-state.py"`);
+    expect(content).toContain(expectedPythonCmd);
     expect(content).not.toContain("{{PYTHON_CMD}}");
   });
 
