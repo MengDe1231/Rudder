@@ -34,6 +34,15 @@ import { compareVersions } from "../utils/compare-versions.js";
 import { toPosix } from "../utils/posix.js";
 import { setupProxy } from "../utils/proxy.js";
 import { emptyTaskJson } from "../utils/task-json.js";
+import {
+  loadSpecRegistryConfig,
+} from "../utils/registry-config.js";
+import {
+  fetchRegistrySpecTemplates,
+  collectDirectoryFiles,
+  parseRegistrySource,
+  type RegistrySource,
+} from "../utils/template-fetcher.js";
 
 // Import templates for comparison
 import {
@@ -607,7 +616,7 @@ function preserveExistingClaudeStatusLine(
   }
 }
 
-function collectTemplateFiles(
+async function collectTemplateFiles(
   cwd: string,
   extraPlatforms?: Set<AITool>,
   /**
@@ -619,7 +628,7 @@ function collectTemplateFiles(
    * "Modified by you" conflict prompt — they can skip per-file there.
    */
   bypassUpdateSkip = false,
-): Map<string, string> {
+): Promise<Map<string, string>> {
   const files = new Map<string, string>();
   const platforms = getConfiguredPlatforms(cwd);
   if (extraPlatforms) {
@@ -683,7 +692,91 @@ function collectTemplateFiles(
     files.set(filePath, replacePythonCommandLiterals(content));
   }
 
+  // Collect registry spec templates (if configured)
+  await collectRegistrySpecTemplates(cwd, files);
+
   return files;
+}
+
+/**
+ * Walk `.rudder/spec/` and return Map of relative-to-cwd paths → content.
+ * Re-export of collectDirectoryFiles for update flow convenience.
+ */
+async function collectSpecFiles(
+  cwd: string,
+): Promise<Map<string, string>> {
+  const specRoot = path.join(cwd, DIR_NAMES.WORKFLOW, DIR_NAMES.SPEC);
+  if (!fs.existsSync(specRoot)) return new Map();
+  return collectDirectoryFiles(specRoot, specRoot);
+}
+
+/**
+ * Fetch registry spec templates and merge into the template map for update.
+ *
+ * If `registry.spec.source` is configured in config.yaml, fetches the latest
+ * from the registry and includes each file in the template map. Existing
+ * user-modified files are still protected by the hash-based conflict prompt.
+ */
+async function collectRegistrySpecTemplates(
+  cwd: string,
+  files: Map<string, string>,
+): Promise<void> {
+  const registryConfig = loadSpecRegistryConfig(cwd);
+  if (!registryConfig?.source) return;
+
+  console.log(
+    chalk.gray(
+      `   Checking for registry spec updates from ${registryConfig.source}...`,
+    ),
+  );
+
+  let registry: RegistrySource;
+  try {
+    registry = parseRegistrySource(registryConfig.source);
+  } catch (error) {
+    console.log(
+      chalk.yellow(
+        `   Warning: invalid registry source in config: ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
+    return;
+  }
+
+  try {
+    const result = await fetchRegistrySpecTemplates(registry);
+
+    if (!result.success) {
+      console.log(
+        chalk.yellow(
+          `   Warning: could not fetch registry specs: ${result.message}`,
+        ),
+      );
+      return;
+    }
+
+    if (result.files.size === 0) {
+      console.log(chalk.gray("   No registry spec templates found."));
+      return;
+    }
+
+    for (const [relativePath, content] of result.files) {
+      // Prefix with .rudder/ so the path is relative to cwd
+      const updateKey = toPosix(path.join(DIR_NAMES.WORKFLOW, relativePath));
+      files.set(updateKey, content);
+    }
+
+    console.log(
+      chalk.gray(
+        `   Found ${result.files.size} registry spec template file(s).`,
+      ),
+    );
+  } catch (error) {
+    console.log(
+      chalk.yellow(
+        `   Warning: could not fetch registry spec templates: ${error instanceof Error ? error.message : String(error)}`,
+      ),
+    );
+  }
 }
 
 /**
@@ -1808,7 +1901,7 @@ export async function update(options: UpdateOptions): Promise<void> {
     })();
 
   // Collect templates (used for both migration classification and change analysis)
-  const templates = collectTemplateFiles(
+  const templates = await collectTemplateFiles(
     cwd,
     codexUpgradeNeeded ? new Set<AITool>(["codex"]) : undefined,
     breakingBypass,
