@@ -117,10 +117,11 @@ def _parse_yaml_block(
             key, _, value = stripped.partition(":")
             key = key.strip()
             value = _strip_inline_comment(value).strip()
+            was_quoted = len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'")
             value = _unquote(value)
             current_list = None
 
-            if value:
+            if value or was_quoted:
                 # key: value
                 target[key] = value
                 i += 1
@@ -168,8 +169,48 @@ DEFAULT_SESSION_COMMIT_MESSAGE = "chore: record journal"
 DEFAULT_MAX_JOURNAL_LINES = 2000
 DEFAULT_SESSION_AUTO_COMMIT = False  # journal / task archive auto-commit
 DEFAULT_CODE_AUTO_COMMIT = False     # Phase 3.4 code commit
+DEFAULT_PROMPT_INJECTION_SKIP_KEYWORD = "skip rudder"
+DEFAULT_CONTEXT_INJECTION_MAX_FILE_BYTES = 32768
+DEFAULT_CONTEXT_INJECTION_MAX_ARTIFACT_BYTES = 65536
+DEFAULT_CONTEXT_INJECTION_MAX_TOTAL_BYTES = 131072
 
 CONFIG_FILE = "config.yaml"
+
+
+def get_prompt_injection_skip_keyword(repo_root: Path | None = None) -> str:
+    """Return the per-turn workflow breadcrumb escape-hatch keyword."""
+    config = _load_config(repo_root)
+    section = config.get("prompt_injection")
+    if not isinstance(section, dict):
+        return DEFAULT_PROMPT_INJECTION_SKIP_KEYWORD
+    value = section.get("skip_keyword", DEFAULT_PROMPT_INJECTION_SKIP_KEYWORD)
+    return value if isinstance(value, str) else DEFAULT_PROMPT_INJECTION_SKIP_KEYWORD
+
+
+def get_context_injection_limits(repo_root: Path | None = None) -> dict[str, int]:
+    """Return safe byte limits for sub-agent context injection.
+
+    A value of zero disables that limit. Invalid or negative values fall back
+    to the documented default so malformed local config cannot break hooks.
+    """
+    config = _load_config(repo_root)
+    section = config.get("context_injection")
+    defaults = {
+        "max_file_bytes": DEFAULT_CONTEXT_INJECTION_MAX_FILE_BYTES,
+        "max_artifact_bytes": DEFAULT_CONTEXT_INJECTION_MAX_ARTIFACT_BYTES,
+        "max_total_bytes": DEFAULT_CONTEXT_INJECTION_MAX_TOTAL_BYTES,
+    }
+    if not isinstance(section, dict):
+        return defaults
+    result = dict(defaults)
+    for key, default in defaults.items():
+        value = section.get(key, default)
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            parsed = default
+        result[key] = parsed if parsed >= 0 else default
+    return result
 
 
 def _is_true_config_value(value: object) -> bool:

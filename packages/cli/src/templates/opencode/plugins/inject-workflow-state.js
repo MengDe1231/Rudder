@@ -101,6 +101,19 @@ function buildBreadcrumb(id, status, templates, source = null) {
   return `<workflow-state>\n${header}\n${body}\n</workflow-state>`
 }
 
+function shouldSkipPrompt(input) {
+  const prompt = typeof input?.prompt === "string"
+    ? input.prompt
+    : typeof input?.message === "string"
+      ? input.message
+      : ""
+  return [
+    "skip rudder", "no task", "just do it", "don't create a task",
+    "do not create a task", "跳过 rudder", "别走流程", "小修一下",
+    "直接改", "先别建任务",
+  ].some((keyword) => new RegExp(`(?<![\\w-])${keyword.replace(/[.*+?^${}()|[\\]\\]/g, "\\\\$&")}(?![\\w-])`, "i").test(prompt))
+}
+
 // OpenCode 1.2.x expects plugins to be factory functions (see inject-subagent-context.js comment).
 export default async ({ directory }) => {
   const ctx = new RudderContext(directory)
@@ -122,6 +135,10 @@ export default async ({ directory }) => {
             return
           }
           if (process.env.OPENCODE_NON_INTERACTIVE === "1") {
+            return
+          }
+          if (shouldSkipPrompt(input)) {
+            debugLog("workflow-state", "Skipping breadcrumb for explicit fast path")
             return
           }
           if (!ctx.isRudderProject()) {

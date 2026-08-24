@@ -125,6 +125,28 @@ describe("shared-hooks capability table", () => {
     }
   });
 
+  it("workflow-state supports an explicit per-turn fast-path escape hatch", () => {
+    const hook = getSharedHookScripts().find(
+      (item) => item.name === "inject-workflow-state.py",
+    );
+    expect(hook).toBeDefined();
+    expect(hook?.content).toContain("_prompt_requests_skip");
+    expect(hook?.content).toContain('"skip rudder"');
+    expect(hook?.content).toContain('"直接改"');
+  });
+
+  it("sub-agent context injection has bounded, deduplicated payloads", () => {
+    const hook = getSharedHookScripts().find(
+      (item) => item.name === "inject-subagent-context.py",
+    );
+    expect(hook).toBeDefined();
+    const content = hook?.content ?? "";
+    expect(content).toContain("DEFAULT_MAX_TOTAL_BYTES = 131072");
+    expect(content).toContain("_truncate_utf8");
+    expect(content).toContain("budget.seen");
+    expect(content).toContain("read on demand");
+  });
+
   // A-soft (issue #234 mirror): shared session-start.py — used by Claude /
   // Cursor / Gemini / Qoder / CodeBuddy / Droid / Kiro — must include the
   // same sub-agent self-exemption clauses that codex/hooks/session-start.py

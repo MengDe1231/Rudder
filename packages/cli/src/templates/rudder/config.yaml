@@ -103,6 +103,28 @@ max_journal_lines: 2000
 #   dispatch_mode: inline  # or "sub-agent" to dispatch rudder-* sub-agents
 
 #-------------------------------------------------------------------------------
+# Prompt injection escape hatch
+#-------------------------------------------------------------------------------
+# When the current user message contains one of Rudder's explicit skip phrases,
+# the per-turn workflow breadcrumb is omitted for that turn. This does not
+# disable SessionStart or sub-agent context injection.
+#
+# prompt_injection:
+#   skip_keyword: "skip rudder"   # empty string disables the configured alias
+
+#-------------------------------------------------------------------------------
+# Sub-agent context injection limits
+#-------------------------------------------------------------------------------
+# Context is truncated safely at UTF-8 boundaries. Once the total budget is
+# exhausted, remaining files are represented by an index line and can be read
+# on demand by the agent. A value of 0 disables that limit.
+#
+# context_injection:
+#   max_file_bytes: 32768
+#   max_artifact_bytes: 65536
+#   max_total_bytes: 131072
+
+#-------------------------------------------------------------------------------
 # Tool Path Configuration
 #-------------------------------------------------------------------------------
 # Declare tools your project requires. Rudder will:

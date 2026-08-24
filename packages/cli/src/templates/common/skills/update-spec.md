@@ -1,8 +1,15 @@
 # Update Code-Spec - Capture Executable Contracts
 
-When you learn something valuable (from debugging, implementing, or discussion), use this to update the relevant code-spec documents.
+Use this skill only when a task changes durable project knowledge. The current
+business requirements belong in `prd.md`; implementing a requirement does not
+automatically require a Spec update.
 
-**Timing**: After completing a task, fixing a bug, or discovering a new pattern
+**Timing**: Update after a task adds or changes a durable business rule,
+workflow/state transition, acceptance rule, API/DTO/VO/database/
+permission/transaction/cache contract, reusable convention, prevention rule,
+or exposes an incorrect Spec. Skip one-off copy, styling, customer campaigns,
+and local implementation details; record `no durable Spec change` in the task
+summary when skipped.
 
 ---
 

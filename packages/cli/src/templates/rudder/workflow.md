@@ -120,7 +120,7 @@ python3 ./.rudder/scripts/get_context.py --mode phase --step <X.Y>  # detailed g
   TAG ↔ PHASE scoping:
     [workflow-state:no_task]      → no active task; before Phase 1
     [workflow-state:planning]     → all of Phase 1 (status='planning')
-    [workflow-state:in_progress]  → Phase 2 + Phase 3.1-3.4
+    [workflow-state:in_progress]  → Phase 2 + Phase 3.2-3.4
                                     (status stays 'in_progress' from
                                     task.py start until task.py archive)
     [workflow-state:completed]    → currently DEAD: cmd_archive flips
@@ -151,8 +151,8 @@ Phase 3: Finish  → distill lessons + wrap-up
 
 [workflow-state:no_task]
 No active task. **A Direct answer** — pure Q&A / explanation / lookup / chat; no file writes + one-line answer + repo reads ≤ 2 files → AI judges, no override needed.
-**B Create a task** — any implementation / code change / build / refactor work. Entry sequence: (1) `python3 ./.rudder/scripts/task.py create "<title>"` to create the task (status=planning, breadcrumb switches to [workflow-state:planning] for brainstorm + jsonl phase guidance) → (2) load `rudder-brainstorm` skill to discuss requirements with the user and iterate on prd.md → (3) once prd is done and jsonl is curated, run `task.py start <task-dir>` to enter [workflow-state:in_progress] for the implementation skeleton. **"It looks small" is NOT grounds for downgrading B to A or C**.
-**C Inline change** (per-turn only, escape hatch for B) — the user's CURRENT message MUST contain one of: "skip rudder" / "no task" / "just do it" / "don't create a task" / "跳过 rudder" / "别走流程" / "小修一下" / "直接改" / "先别建任务" → briefly acknowledge ("ok, skipping rudder flow this turn"), then inline. **Without seeing one of these phrases you must NOT inline on your own**; do not invent an override the user never said.
+**B Create a task** — implementation / code change / build / refactor work that is not an explicit Fast Path or requires a durable task record. Entry sequence: create the task, load `rudder-brainstorm`, complete the PRD and required context, then run `task.py start <task-dir>`.
+**C Inline change** (per-turn fast path) — the user's CURRENT message may explicitly contain one of: "skip rudder" / "no task" / "just do it" / "don't create a task" / "跳过 rudder" / "别走流程" / "小修一下" / "直接改" / "先别建任务". When present, acknowledge briefly, skip task creation and per-turn workflow injection, then make the requested low-risk change and run the smallest relevant validation. This is not permission to bypass safety checks for database, API, permission, transaction, cache, or cross-module changes.
 [/workflow-state:no_task]
 
 ### Phase 1: Plan
@@ -192,13 +192,13 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 - 2.3 Rollback `[on demand]`
 
 <!-- Per-turn breadcrumb: shown while status='in_progress'.
-     Scope: all of Phase 2 + Phase 3.1-3.4 (status stays 'in_progress' from
+     Scope: all of Phase 2 + Phase 3.2-3.4 (status stays 'in_progress' from
      task.py start until task.py archive; only archive flips it). The body
      therefore must cover every required step from implementation through
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
 [workflow-state:in_progress]
-**Flow**: rudder-implement → rudder-check → rudder-update-spec → commit (Phase 3.4) → `/rudder:finish-work`.
+**Flow**: rudder-implement → rudder-check (full task diff) → conditional rudder-update-spec → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (no override)**: dispatch the `rudder-implement` / `rudder-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 commit (required, once): after rudder-update-spec, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `rudder-implement`, implement directly from the loaded task context and do NOT spawn another `rudder-implement`; if you are already running as `rudder-check`, review/fix directly and do NOT spawn another `rudder-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `rudder-implement` / `rudder-check` / `rudder-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `rudder-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
@@ -211,15 +211,15 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
-**Flow** (inline mode): main session loads `rudder-before-dev` → main session edits code → main session loads `rudder-check` → run lint / type-check / tests → fix → `rudder-update-spec` → commit (Phase 3.4) → `/rudder:finish-work`.
+**Flow** (inline mode): main session loads `rudder-before-dev` → main session edits code → main session loads `rudder-check` for the full task diff → run lint / type-check / tests → fix → conditional `rudder-update-spec` → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `rudder-implement` / `rudder-check` sub-agents. Load the `rudder-before-dev` skill before writing code; load the `rudder-check` skill before reporting completion.
 Phase 3.4 commit (required, once): after `rudder-update-spec`, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
-- 3.1 Quality verification `[required · repeatable]`
+- 3.1 Quality verification `[folded into 2.2 and commit preamble]`
 - 3.2 Debug retrospective `[on demand]`
-- 3.3 Spec update `[required · once]`
+- 3.3 Spec update `[conditional · once]`
 - 3.4 Commit changes `[required · once]`
 - 3.5 Wrap-up reminder
 
@@ -566,16 +566,6 @@ If issues are found → fix → re-check, until green.
 
 Goal: ensure code quality, capture lessons, record the work.
 
-#### 3.1 Quality verification `[required · repeatable]`
-
-Load the `rudder-check` skill and do a final verification:
-- Spec compliance
-- lint / type-check / tests
-- Compile/build verification (detect project type, run compile command, fix errors up to 3 rounds)
-- Cross-layer consistency (when changes span layers)
-
-If issues are found → fix → re-check, until green.
-
 #### 3.2 Debug retrospective `[on demand]`
 
 If this task involved repeated debugging (the same issue was fixed multiple times), load the `rudder-break-loop` skill to:
@@ -585,14 +575,18 @@ If this task involved repeated debugging (the same issue was fixed multiple time
 
 The goal is to capture debugging lessons so the same class of issue doesn't recur.
 
-#### 3.3 Spec update `[required · once]`
+#### 3.3 Spec update `[conditional · once]`
 
-Load the `rudder-update-spec` skill and review whether this task produced new knowledge worth recording:
-- Newly discovered patterns or conventions
-- Pitfalls you hit
-- New technical decisions
+Load `rudder-update-spec` only when this task adds or changes durable project knowledge:
+- a business rule, workflow, state transition, or acceptance rule that future tasks must follow;
+- an API/DTO/VO, database, permission, transaction, cache, or other cross-layer contract;
+- a reusable implementation pattern, technical convention, or prevention rule;
+- a bug or mismatch showing that the current Spec is incomplete or incorrect.
 
-Update the docs under `.rudder/spec/` accordingly. Even if the conclusion is "nothing to update", walk through the judgment.
+The task's current business requirements always belong in `prd.md`; a one-off page,
+copy, customer campaign, or implementation detail does not require a Spec update.
+If none of these triggers apply, record "no durable Spec change" in the task summary
+and continue without loading the full update-spec skill.
 
 #### 3.4 Commit changes `[required · once]`
 
@@ -664,7 +658,7 @@ All 4 tag blocks live in the `## Phase Index` section above, immediately after e
 |---|---|
 | No active task (before Phase 1) | `[workflow-state:no_task]` (after the Phase Index ASCII art) |
 | All of Phase 1 (task created → ready for implementation) | `[workflow-state:planning]` (after Phase 1 summary) |
-| Phase 2 + Phase 3.1–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
+| Phase 2 + Phase 3.2–3.4 (implementation + check + wrap-up) | `[workflow-state:in_progress]` (after Phase 2 summary) |
 | After Phase 3.5 (archived) | `[workflow-state:completed]` (after Phase 3 summary; **currently DEAD**) |
 
 ### Changing the per-turn prompt text

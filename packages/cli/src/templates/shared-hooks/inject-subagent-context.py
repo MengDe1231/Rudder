@@ -62,6 +62,10 @@ AGENTS_REQUIRE_TASK = (AGENT_IMPLEMENT, AGENT_CHECK)
 # All supported agents
 AGENTS_ALL = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_RESEARCH)
 
+DEFAULT_MAX_FILE_BYTES = 32768
+DEFAULT_MAX_ARTIFACT_BYTES = 65536
+DEFAULT_MAX_TOTAL_BYTES = 131072
+
 
 def find_repo_root(start_path: str) -> str | None:
     """
@@ -136,7 +140,10 @@ def read_file_content(base_path: str, file_path: str) -> str | None:
     if os.path.exists(full_path) and os.path.isfile(full_path):
         try:
             with open(full_path, "r", encoding="utf-8") as f:
-                return f.read()
+                content = f.read()
+                # Binary files are not useful prompt context and can explode the
+                # payload after replacement decoding.
+                return None if "\x00" in content else content
         except Exception:
             return None
     return None
@@ -184,6 +191,71 @@ def read_directory_contents(
         pass
 
     return results
+
+
+def _get_context_limits(repo_root: str) -> dict[str, int]:
+    """Read configured limits without making the hook depend on YAML libs."""
+    scripts_dir = Path(repo_root) / DIR_WORKFLOW / "scripts"
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from common.config import get_context_injection_limits  # type: ignore[import-not-found]
+
+        return get_context_injection_limits(Path(repo_root))
+    except Exception:
+        return {
+            "max_file_bytes": DEFAULT_MAX_FILE_BYTES,
+            "max_artifact_bytes": DEFAULT_MAX_ARTIFACT_BYTES,
+            "max_total_bytes": DEFAULT_MAX_TOTAL_BYTES,
+        }
+
+
+class _ContextBudget:
+    """Track the total UTF-8 bytes emitted into one agent prompt."""
+
+    def __init__(self, max_total_bytes: int) -> None:
+        self.max_total_bytes = max_total_bytes
+        self.used = 0
+        self.seen: set[str] = set()
+
+    def add(self, size: int) -> None:
+        self.used += size
+
+    def has_room(self, size: int) -> bool:
+        return self.max_total_bytes <= 0 or self.used + size <= self.max_total_bytes
+
+
+def _truncate_utf8(content: str, max_bytes: int) -> tuple[str, bool]:
+    """Truncate text without splitting a UTF-8 sequence."""
+    if max_bytes <= 0:
+        return content, False
+    raw = content.encode("utf-8")
+    if len(raw) <= max_bytes:
+        return content, False
+    return raw[:max_bytes].decode("utf-8", errors="ignore"), True
+
+
+def _format_context_entry(
+    path: str,
+    content: str,
+    budget: _ContextBudget,
+    max_bytes: int,
+) -> str:
+    """Format one entry, degrading to an index line when the budget is full."""
+    normalized = str(Path(path).as_posix())
+    if normalized in budget.seen:
+        return ""
+    budget.seen.add(normalized)
+    original_size = len(content.encode("utf-8"))
+    content, truncated = _truncate_utf8(content, max_bytes)
+    if truncated:
+        content += f"\n[Rudder: truncated at {max_bytes} bytes; read {path} for full content]"
+    block = f"=== {path} ===\n{content}"
+    block_size = len(block.encode("utf-8"))
+    if not budget.has_room(block_size):
+        return f"=== {path} ({original_size} bytes; read on demand) ==="
+    budget.add(block_size)
+    return block
 
 
 def read_jsonl_entries(base_path: str, jsonl_path: str) -> list[tuple[str, str]]:
@@ -257,7 +329,13 @@ def read_jsonl_entries(base_path: str, jsonl_path: str) -> list[tuple[str, str]]
 
 
 
-def get_agent_context(repo_root: str, task_dir: str, agent_type: str) -> str:
+def get_agent_context(
+    repo_root: str,
+    task_dir: str,
+    agent_type: str,
+    budget: _ContextBudget,
+    max_file_bytes: int,
+) -> str:
     """
     Get context from {agent_type}.jsonl for the specified agent.
     Only reads implement.jsonl or check.jsonl (the two JSONL files the task system creates).
@@ -266,7 +344,9 @@ def get_agent_context(repo_root: str, task_dir: str, agent_type: str) -> str:
 
     agent_jsonl = f"{task_dir}/{agent_type}.jsonl"
     for file_path, content in read_jsonl_entries(repo_root, agent_jsonl):
-        context_parts.append(f"=== {file_path} ===\n{content}")
+        formatted = _format_context_entry(file_path, content, budget, max_file_bytes)
+        if formatted:
+            context_parts.append(formatted)
 
     return "\n\n".join(context_parts)
 
@@ -281,23 +361,39 @@ def get_implement_context(repo_root: str, task_dir: str) -> str:
     3. info.md (technical design)
     """
     context_parts = []
+    limits = _get_context_limits(repo_root)
+    budget = _ContextBudget(limits["max_total_bytes"])
 
     # 1. Read implement.jsonl
-    base_context = get_agent_context(repo_root, task_dir, "implement")
+    base_context = get_agent_context(
+        repo_root, task_dir, "implement", budget, limits["max_file_bytes"]
+    )
     if base_context:
         context_parts.append(base_context)
 
     # 2. Requirements document
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
     if prd_content:
-        context_parts.append(f"=== {task_dir}/prd.md (Requirements) ===\n{prd_content}")
+        formatted = _format_context_entry(
+            f"{task_dir}/prd.md (Requirements)",
+            prd_content,
+            budget,
+            limits["max_artifact_bytes"],
+        )
+        if formatted:
+            context_parts.append(formatted)
 
     # 3. Technical design
     info_content = read_file_content(repo_root, f"{task_dir}/info.md")
     if info_content:
-        context_parts.append(
-            f"=== {task_dir}/info.md (Technical Design) ===\n{info_content}"
+        formatted = _format_context_entry(
+            f"{task_dir}/info.md (Technical Design)",
+            info_content,
+            budget,
+            limits["max_artifact_bytes"],
         )
+        if formatted:
+            context_parts.append(formatted)
 
     return "\n\n".join(context_parts)
 
@@ -307,13 +403,24 @@ def get_check_context(repo_root: str, task_dir: str) -> str:
     Context for Check Agent: check.jsonl + prd.md
     """
     context_parts = []
+    limits = _get_context_limits(repo_root)
+    budget = _ContextBudget(limits["max_total_bytes"])
 
     for file_path, content in read_jsonl_entries(repo_root, f"{task_dir}/check.jsonl"):
-        context_parts.append(f"=== {file_path} ===\n{content}")
+        formatted = _format_context_entry(file_path, content, budget, limits["max_file_bytes"])
+        if formatted:
+            context_parts.append(formatted)
 
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
     if prd_content:
-        context_parts.append(f"=== {task_dir}/prd.md (Requirements) ===\n{prd_content}")
+        formatted = _format_context_entry(
+            f"{task_dir}/prd.md (Requirements)",
+            prd_content,
+            budget,
+            limits["max_artifact_bytes"],
+        )
+        if formatted:
+            context_parts.append(formatted)
 
     return "\n\n".join(context_parts)
 

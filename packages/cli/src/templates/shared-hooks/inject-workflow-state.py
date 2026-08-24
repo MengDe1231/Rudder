@@ -229,10 +229,39 @@ def _read_rudder_config(root: Path) -> dict:
         from common.rudder_config import read_rudder_config  # type: ignore[import-not-found]
     except Exception:
         return {}
+
     try:
         return read_rudder_config(root)
     except Exception:
         return {}
+
+
+def _prompt_requests_skip(prompt: object, config: dict) -> bool:
+    """Return whether this turn explicitly opts out of Rudder breadcrumbs."""
+    if not isinstance(prompt, str):
+        return False
+    configured = ""
+    section = config.get("prompt_injection") if isinstance(config, dict) else None
+    if isinstance(section, dict) and isinstance(section.get("skip_keyword"), str):
+        configured = section["skip_keyword"].strip()
+    keywords = {
+        "skip rudder",
+        "no task",
+        "just do it",
+        "don't create a task",
+        "do not create a task",
+        "跳过 rudder",
+        "别走流程",
+        "小修一下",
+        "直接改",
+        "先别建任务",
+    }
+    if configured:
+        keywords.add(configured)
+    return any(
+        re.search(r"(?<![\w-])" + re.escape(keyword) + r"(?![\w-])", prompt, re.IGNORECASE)
+        for keyword in keywords
+    )
 
 
 def _build_tool_paths_block(root: Path) -> str:
@@ -353,9 +382,12 @@ def main() -> int:
     if root is None:
         return 0  # not a Rudder project
 
+    config = _read_rudder_config(root)
+    if _prompt_requests_skip(data.get("prompt", ""), config):
+        return 0
+
     templates = load_breadcrumbs(root)
     platform = _detect_platform(data)
-    config = _read_rudder_config(root)
     task = get_active_task(root, data)
     if task is None:
         # No active task — still emit a breadcrumb nudging AI toward

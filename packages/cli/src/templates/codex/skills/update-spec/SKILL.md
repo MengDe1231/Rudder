@@ -7,7 +7,9 @@ description: "Captures executable contracts and coding knowledge into .rudder/sp
 
 When you learn something valuable (from debugging, implementing, or discussion), use this skill to update the relevant code-spec documents.
 
-**Timing**: After completing a task, fixing a bug, or discovering a new pattern
+**Timing**: Only when the task changes durable project knowledge. The current
+task's requirements belong in `prd.md`; implementing a business request does
+not automatically require a Spec update.
 
 ---
 
@@ -32,6 +34,17 @@ Required sections for infra/cross-layer specs:
 ---
 
 ## When to Update Code-Specs
+
+Update a code-spec when the change introduces or changes a durable business
+rule, workflow/state transition, acceptance rule, API/DTO/VO/database/
+permission/transaction/cache contract, reusable implementation convention, or
+prevention rule. Also update it when the existing Spec is shown to be wrong or
+incomplete.
+
+Do not update a code-spec for one-off copy, styling, customer campaign rules,
+single-page behavior, or implementation details that future work does not need
+to repeat. If no trigger applies, record `no durable Spec change` in the task
+summary and stop this skill.
 
 | Trigger | Example | Target Spec |
 |---------|---------|-------------|

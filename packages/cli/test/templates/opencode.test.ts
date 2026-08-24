@@ -719,4 +719,18 @@ describe("opencode chat.message subagent skip (issue #264)", () => {
     expect(parts[0].text).toContain("<workflow-state>");
     expect(parts[0].text).toContain("user prompt");
   });
+
+  it("inject-workflow-state.js skips explicit fast-path prompts", async () => {
+    const hooks = (await injectWorkflowStatePlugin({
+      directory: dir,
+    })) as ChatMessageHooks;
+    const parts: ChatMessagePart[] = [{ type: "text", text: "skip rudder: rename this variable" }];
+
+    await hooks["chat.message"](
+      { sessionID: "main-session", agent: "build", prompt: "skip rudder: rename this variable" },
+      { parts },
+    );
+
+    expect(parts[0].text).toBe("skip rudder: rename this variable");
+  });
 });

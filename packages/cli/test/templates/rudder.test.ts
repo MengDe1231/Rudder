@@ -86,6 +86,17 @@ describe("rudder template constants", () => {
     expect(workflowMdTemplate).toContain("#");
   });
 
+  it("first-wave workflow removes duplicate verification and conditions Spec updates", () => {
+    expect(workflowMdTemplate).not.toContain(
+      "#### 3.1 Quality verification `[required",
+    );
+    expect(workflowMdTemplate).toContain(
+      "#### 3.3 Spec update `[conditional",
+    );
+    expect(workflowMdTemplate).toContain("business rule");
+    expect(workflowMdTemplate).toContain("no durable Spec change");
+  });
+
   it("[issue-225] workflow.md in_progress breadcrumb has class-2 sub-agent dispatch protocol", () => {
     // The in_progress breadcrumb instructs the main agent to prefix
     // dispatch prompts with "Active task: <path>" on class-2 platforms.
