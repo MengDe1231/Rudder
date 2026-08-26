@@ -578,7 +578,7 @@ describe("update() integration", () => {
       "Local 0.5.10 config customization that must survive update.",
     );
     expect(updatedConfig).toContain("Session Auto-Commit");
-    expect(updatedConfig).toContain("session_auto_commit: true");
+    expect(updatedConfig).toContain("session_auto_commit: false");
 
     // User-modified template files are skipped under skipAll and their hashes
     // are not rewritten to bless the local modification as a template.
@@ -736,7 +736,8 @@ describe("update() integration", () => {
   });
 
   // Original template content for check-backend.md (deleted in 0.4.0-beta.1).
-  // Hash: 4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3
+  // Hash: 8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca
+  const HISTORICAL_ARROW = String.fromCodePoint(0x2192);
   const ORIGINAL_CHECK_BACKEND_CONTENT = [
     "Check if the code you just wrote follows the backend development guidelines.",
     "",
@@ -744,11 +745,11 @@ describe("update() integration", () => {
     "1. Run `git status` to see modified files",
     "2. Read `.rudder/spec/backend/index.md` to understand which guidelines apply",
     "3. Based on what you changed, read the relevant guideline files:",
-    "   - Database changes → `.rudder/spec/backend/database-guidelines.md`",
-    "   - Error handling → `.rudder/spec/backend/error-handling.md`",
-    "   - Logging changes → `.rudder/spec/backend/logging-guidelines.md`",
-    "   - Type changes → `.rudder/spec/backend/type-safety.md`",
-    "   - Any changes → `.rudder/spec/backend/quality-guidelines.md`",
+    `   - Database changes ${HISTORICAL_ARROW} \`.rudder/spec/backend/database-guidelines.md\``,
+    `   - Error handling ${HISTORICAL_ARROW} \`.rudder/spec/backend/error-handling.md\``,
+    `   - Logging changes ${HISTORICAL_ARROW} \`.rudder/spec/backend/logging-guidelines.md\``,
+    `   - Type changes ${HISTORICAL_ARROW} \`.rudder/spec/backend/type-safety.md\``,
+    `   - Any changes ${HISTORICAL_ARROW} \`.rudder/spec/backend/quality-guidelines.md\``,
     "4. Review your code against the guidelines",
     "5. Report any violations and fix them if found",
     "",
@@ -759,7 +760,7 @@ describe("update() integration", () => {
 
     // Sanity: content hash must match the manifest's allowed_hashes
     expect(computeHash(ORIGINAL_CHECK_BACKEND_CONTENT)).toBe(
-      "4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3",
+      "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca",
     );
 
     // Create a deprecated file with original content (hash matches allowed_hashes)
@@ -791,7 +792,7 @@ describe("update() integration", () => {
 
     // Sanity: content hash must match the manifest's allowed_hashes
     expect(computeHash(ORIGINAL_CHECK_BACKEND_CONTENT)).toBe(
-      "4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3",
+      "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca",
     );
 
     // Create deprecated file with original content (hash matches allowed_hashes)

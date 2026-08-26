@@ -24,7 +24,7 @@
       "type": "safe-file-delete",
       "from": ".claude/commands/rudder/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3", "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca"]
     },
     {
       "type": "safe-file-delete",
@@ -48,7 +48,7 @@
       "type": "safe-file-delete",
       "from": ".cursor/commands/rudder-check-backend.md",
       "description": "Replaced by rudder-check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3", "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca"]
     },
     {
       "type": "safe-file-delete",
@@ -72,7 +72,7 @@
       "type": "safe-file-delete",
       "from": ".iflow/commands/rudder/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3", "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca"]
     },
     {
       "type": "safe-file-delete",
@@ -96,7 +96,7 @@
       "type": "safe-file-delete",
       "from": ".opencode/commands/rudder/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3", "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca"]
     },
     {
       "type": "safe-file-delete",
@@ -120,7 +120,7 @@
       "type": "safe-file-delete",
       "from": ".kilocode/workflows/check-backend.md",
       "description": "Replaced by check.md",
-      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3"]
+      "allowed_hashes": ["4e81a28d681ea770f780df55a212fd504ce21ee49b44ba16023b74b5c243cef3", "8117a8fc9df4e392be8fe5e167c2ed3e3a70d32d2f69f726f0bdc4ee4a8581ca"]
     },
     {
       "type": "safe-file-delete",

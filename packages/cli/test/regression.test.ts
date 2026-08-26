@@ -215,6 +215,7 @@ describe("regression: branch context in session records (issue-106)", () => {
 
 describe("regression: add_session.py runtime branch context (issue-106)", () => {
   let tmpDir: string;
+  const pythonCmd = process.platform === "win32" ? "python" : "python3";
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "rudder-session-"));
@@ -352,7 +353,7 @@ ${separator}
 
   function runAddSession(title: string, options?: { branch?: string }): void {
     const command = [
-      "python3",
+      pythonCmd,
       JSON.stringify(
         path.join(tmpDir, ".rudder", "scripts", "add_session.py"),
       ),
@@ -3332,10 +3333,12 @@ print(len(entries))
       "result = {'M': mod._strip_breadcrumb_tag_blocks(matched), 'X': mod._strip_breadcrumb_tag_blocks(mismatched), 'N': mod._strip_breadcrumb_tag_blocks(nested_orphan)}",
       "print(json.dumps(result))",
     ].join("; ");
-    const output = execSync(`${pythonCmd} -c ${JSON.stringify(probe)}`, {
+    const probeResult = spawnSync(pythonCmd, ["-c", probe], {
       cwd: tmpDir,
       encoding: "utf-8",
     });
+    expect(probeResult.status).toBe(0);
+    const output = probeResult.stdout ?? "";
     const lastLine = output
       .split("\n")
       .filter((l) => l.startsWith("{"))
@@ -4888,7 +4891,8 @@ describe("regression: parse_simple_yaml Python execution (0.3.8)", () => {
       "print(json.dumps(result))",
     ].join("\n");
     fs.writeFileSync(scriptFile, script);
-    const out = execSync(`python3 ${JSON.stringify(scriptFile)}`, {
+    const pythonCmd = process.platform === "win32" ? "python" : "python3";
+    const out = execSync(`${pythonCmd} ${JSON.stringify(scriptFile)}`, {
       encoding: "utf-8",
     });
     return JSON.parse(out.trim());
@@ -6037,6 +6041,7 @@ describe("regression: safe auto-commit when .rudder/ is gitignored (0.5.10 → 0
 
   it("[gitignore-rudder] add_session warns and skips when .rudder/ is ignored (default mode)", () => {
     setupRepo({ gitignoreRudder: true });
+    writeConfigYaml("session_auto_commit: true\n");
     const { stderr } = runAddSession();
 
     // Plain add fails with "ignored by". 0.5.11 must NOT retry with -f.
@@ -6075,6 +6080,7 @@ describe("regression: safe auto-commit when .rudder/ is gitignored (0.5.10 → 0
     // Regression guard: pre-existing behavior must not change for users
     // whose .gitignore does not exclude .rudder/.
     setupRepo({ gitignoreRudder: false });
+    writeConfigYaml("session_auto_commit: true\n");
     const { stderr } = runAddSession();
     expect(stderr).toContain("Auto-committed");
 
@@ -6102,6 +6108,7 @@ describe("regression: safe auto-commit when .rudder/ is gitignored (0.5.10 → 0
 
   it("[gitignore-rudder] task.py archive warns and skips when .rudder/ is ignored (default mode)", () => {
     setupRepo({ gitignoreRudder: true });
+    writeConfigYaml("session_auto_commit: true\n");
     // Create a task to archive.
     writeFile(
       ".rudder/tasks/issue-500/task.json",
@@ -6302,14 +6309,15 @@ describe("regression: safe auto-commit when .rudder/ is gitignored (0.5.10 → 0
     }
   });
 
-  it("[session_auto_commit] invalid value falls back to true with stderr warn", () => {
+  it("[session_auto_commit] invalid value falls back to false with stderr warn", () => {
     setupRepo({ gitignoreRudder: false });
     writeConfigYaml("session_auto_commit: maybe\n");
 
     const { stderr } = runAddSession();
     // Warning fires.
     expect(stderr).toContain("invalid session_auto_commit value");
-    // Falls back to true → auto-commit happens.
-    expect(stderr).toContain("Auto-committed");
+    // Falls back to false, matching the safe default.
+    expect(stderr).toContain("session_auto_commit: false");
+    expect(stderr).not.toContain("Auto-committed");
   });
 });

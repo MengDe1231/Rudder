@@ -619,8 +619,8 @@ describe("init() integration", () => {
       path.join(tmpDir, ".claude", "settings.json"),
       "utf-8",
     );
-    expect(settings).toContain(
-      `"${expectedPythonCmd} .claude/hooks/session-start.py"`,
+    expect(settings).toMatch(
+      new RegExp(`"${expectedPythonCmd}(?: -X utf8)? \\.claude/hooks/session-start\\.py"`),
     );
     expect(console.log).toHaveBeenCalledWith(
       expect.stringContaining(

@@ -37,6 +37,7 @@ import {
 } from "../../src/configurators/shared.js";
 
 const BUNDLED_SKILL_NAME = "rudder-meta";
+const BUNDLED_SPEC_SKILL_NAME = "rudder-spec-bootstarp";
 const BUNDLED_REFERENCE = path.join(
   BUNDLED_SKILL_NAME,
   "references",
@@ -269,6 +270,7 @@ describe("configurePlatform", () => {
       [
         ...expected.map((s) => s.name),
         BUNDLED_SKILL_NAME,
+        BUNDLED_SPEC_SKILL_NAME,
         "rudder-start",
       ].sort(),
     );
@@ -364,7 +366,7 @@ describe("configurePlatform", () => {
       .sort();
 
     expect(actualNames).toEqual(
-      [...expected.map((s) => s.name), BUNDLED_SKILL_NAME].sort(),
+      [...expected.map((s) => s.name), BUNDLED_SKILL_NAME, BUNDLED_SPEC_SKILL_NAME].sort(),
     );
 
     for (const skill of expected) {
@@ -533,7 +535,7 @@ describe("configurePlatform", () => {
       .map((e) => e.name)
       .sort();
     expect(actualSkillDirs).toEqual(
-      [...expectedSkills.map((s) => s.name), BUNDLED_SKILL_NAME].sort(),
+      [...expectedSkills.map((s) => s.name), BUNDLED_SKILL_NAME, BUNDLED_SPEC_SKILL_NAME].sort(),
     );
     for (const skill of expectedSkills) {
       const filePath = path.join(skillsDir, skill.name, "SKILL.md");

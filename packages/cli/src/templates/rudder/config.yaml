@@ -19,9 +19,9 @@ max_journal_lines: 2000
 #-------------------------------------------------------------------------------
 
 # Auto-commit behavior for session journal + task archive operations.
-# - true (default): scripts auto-stage and auto-commit journal / task changes
+# - false (default): scripts do not auto-stage or auto-commit journal / task changes
 #   after add_session.py / task.py archive runs.
-# - false: scripts do not touch git. Files (journal-*.md, task archive moves)
+# - true: scripts auto-stage and auto-commit journal / task changes
 #   are still written to disk; you decide whether to git add / commit.
 #
 # Use `false` if your project's .gitignore intentionally excludes `.rudder/`
