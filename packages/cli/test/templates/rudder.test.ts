@@ -97,6 +97,22 @@ describe("rudder template constants", () => {
     expect(workflowMdTemplate).toContain("no durable Spec change");
   });
 
+  it("Verify runs only after the complete implementation batch", () => {
+    expect(workflowMdTemplate).toContain(
+      "2.2 Verify `[required · after implementation; repeat only after fixes]`",
+    );
+    expect(workflowMdTemplate).toContain(
+      "Do not dispatch or load `rudder-check` while",
+    );
+    expect(workflowMdTemplate).toContain(
+      "The implementer must finish the complete",
+    );
+    expect(workflowMdTemplate).toContain("requirement set first");
+    expect(workflowMdTemplate).toContain(
+      "Verify (lint/type-check/tests/build)",
+    );
+  });
+
   it("[issue-225] workflow.md in_progress breadcrumb has class-2 sub-agent dispatch protocol", () => {
     // The in_progress breadcrumb instructs the main agent to prefix
     // dispatch prompts with "Active task: <path>" on class-2 platforms.

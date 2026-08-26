@@ -229,6 +229,12 @@ def cmd_create(args: argparse.Namespace) -> int:
         "relatedFiles": [],
         "notes": "",
         "meta": {},
+        "requirements": {
+            "status": "pending",
+            "confirmed_by": None,
+            "confirmed_at": None,
+            "prd_hash": None,
+        },
     }
 
     write_json(task_json_path, task_data)
@@ -293,9 +299,11 @@ def cmd_create(args: argparse.Namespace) -> int:
             "see .rudder/workflow.md Phase 1.3)",
             file=sys.stderr,
         )
-        print("  3. Run: python3 task.py start <dir>", file=sys.stderr)
+        print("  3. Run: python3 task.py confirm <dir>", file=sys.stderr)
+        print("  4. Run: python3 task.py start <dir>", file=sys.stderr)
     else:
-        print("  2. Run: python3 task.py start <dir>", file=sys.stderr)
+        print("  2. Run: python3 task.py confirm <dir>", file=sys.stderr)
+        print("  3. Run: python3 task.py start <dir>", file=sys.stderr)
     print("", file=sys.stderr)
 
     # Output relative path for script chaining

@@ -79,17 +79,44 @@ Run project's lint and typecheck commands to verify changes.
 
 #### Step 4b: Compile/Build Verification
 
-Detect the project type and run the appropriate compile command:
+**Priority**: Use the project's own declared build command when available.
+Only fall back to defaults when no project-level declaration exists.
 
-| Project type | Detect by | Compile command |
-|-------------|-----------|-----------------|
+1. **Node/Frontend projects** — check `package.json`:
+   - Has `scripts.build`? → Run `npm run build` (or `pnpm run build` / `yarn build` per lockfile)
+   - Has `scripts.typecheck` but no `build`? → Run `npm run typecheck`
+   - Neither? → `npx tsc --noEmit` if `tsconfig.json` exists; else `npx eslint . --no-error-on-unmatched-pattern`
+
+2. **Other projects** — use the standard compile for the detected tool:
+
+| Project type | Detect by | Default compile command |
+|-------------|-----------|------------------------|
 | Java (Maven) | `pom.xml` | `mvn compile -q` |
-| Java (Gradle) | `build.gradle` or `build.gradle.kts` | `./gradlew compileJava -q` |
+| Java (Gradle) | `build.gradle` / `.kts` | `./gradlew compileJava -q` |
 | Go | `go.mod` | `go build ./...` |
 | Rust | `Cargo.toml` | `cargo check --all-targets` |
 | Kotlin (Gradle) | `build.gradle.kts` | `./gradlew compileKotlin -q` |
-| TypeScript | `tsconfig.json` | `npx tsc --noEmit` |
-| Node.js (JS only) | `package.json` (no tsconfig) | `npx eslint . --no-error-on-unmatched-pattern` |
+
+**Note**: Build performance tuning (parallel, caching, daemon) belongs in the
+build tool's own config, not in this command. Rudder runs the standard command;
+the tool reads its own optimization flags automatically.
+
+#### Step 4b-hint: Build Performance Recommendation
+
+After compilation completes, if it took **> 30 seconds**, check whether the
+build tool's standard performance config exists. If missing, add a
+recommendation to the report Summary:
+
+| Build tool | Check for | Recommend creating |
+|-----------|-----------|-------------------|
+| Maven | `.mvn/maven.config` exists? | Create it with `-T 1C` (parallel multi-module build) |
+| Gradle | `org.gradle.parallel=true` in `gradle.properties`? | Add the property |
+| Node/Frontend | (typically fast; skip) | — |
+
+**Rules**:
+- Only **recommend** in the report — do NOT create the file automatically.
+- If the config already exists, stay silent (one-time hint, not recurring noise).
+- Phrasing: "Compilation took Xs. Consider creating `.mvn/maven.config` with `-T 1C` to enable parallel builds — Maven will read it automatically on every invocation."
 
 **Tool path resolution**: Use the paths from the `<tool-paths>` block injected at session-start (e.g., `<tool-paths> - java: /path/to/java </tool-paths>`). If a tool's absolute path is listed there, use it; otherwise fall back to the system PATH.
 

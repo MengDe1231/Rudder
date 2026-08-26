@@ -47,7 +47,11 @@ Review checklist:
 - Check whether tests should be added or updated.
 - Check whether `.rudder/spec/` docs need sync after implementation.
 - Run lint and type-check; fix any failures.
-- Detect project type and run compile: Maven (`mvn compile -q`), Gradle (`./gradlew compileJava -q`), Go (`go build ./...`), Rust (`cargo check --all-targets`), TypeScript (`npx tsc --noEmit`), or Node.js (`npx eslint . --no-error-on-unmatched-pattern`).
+- Detect project type and run compile. **Priority**: use the project's own declared build command when available; fall back to defaults only when no declaration exists.
+  - Node/Frontend: check `package.json` — has `scripts.build`? run `npm run build`; has `scripts.typecheck` but no build? run `npm run typecheck`; neither? `npx tsc --noEmit` if tsconfig exists, else `npx eslint . --no-error-on-unmatched-pattern`.
+  - Maven: `mvn compile -q`; Gradle: `./gradlew compileJava -q`; Go: `go build ./...`; Rust: `cargo check --all-targets`.
+  - Build performance tuning (parallel, caching, daemon) belongs in the build tool's own config, not in this command.
+- If compilation took > 30 seconds AND the build tool's standard performance config is missing (Maven: `.mvn/maven.config`; Gradle: `org.gradle.parallel` in `gradle.properties`), add a one-time recommendation to the report: "Compilation took Xs. Consider creating [config file] with [flag] to enable parallel builds." Do NOT create the file — only recommend. If the config already exists, stay silent.
 - If compilation fails, fix and retry up to 3 rounds. Parse error output, fix source code, re-run compile. Stop and report remaining errors after 3 rounds.
 - Use tool paths from the `<tool-paths>` block injected at session-start if available; otherwise fall back to system PATH.
 - If a required tool is not found or the path is wrong, locate the correct path (e.g., `which mvn`, `where java`) and update `.rudder/config_local.yml` so future sessions can use it directly.

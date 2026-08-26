@@ -73,7 +73,7 @@ python3 ./.rudder/scripts/task.py create-pr [name] [--dry-run]
 
 > Run `python3 ./.rudder/scripts/task.py --help` to see the authoritative, up-to-date list.
 
-**Current-task mechanism**: `task.py create` creates the task directory and (when session identity is available) auto-sets the per-session active-task pointer so the planning breadcrumb fires immediately. `task.py start` writes the same pointer (idempotent if already set) and flips `task.json.status` from `planning` to `in_progress`. State is stored under `.rudder/.runtime/sessions/`. If no context key is available from hook input, `RUDDER_CONTEXT_ID`, or a platform-native session environment variable, there is no active task and `task.py start` fails with a session identity hint. `task.py finish` deletes the current session file (status unchanged). `task.py archive <task>` writes `status=completed`, moves the directory to `archive/`, and deletes any runtime session files that still point at the archived task.
+**Current-task mechanism**: `task.py create` creates the task directory and (when session identity is available) auto-sets the per-session active-task pointer so the planning breadcrumb fires immediately. After the final PRD is confirmed with `task.py confirm`, `task.py start` writes the same pointer (idempotent if already set) and flips `task.json.status` from `planning` to `in_progress`; it refuses to start when the PRD, confirmation hash, acceptance criteria, or applicable JSONL context is incomplete. State is stored under `.rudder/.runtime/sessions/`. If no context key is available, start still performs the readiness gate and then uses degraded mode without persisting a session pointer. `task.py finish` deletes the current session file (status unchanged). `task.py archive <task>` writes `status=completed`, moves the directory to `archive/`, and deletes any runtime session files that still point at the archived task.
 
 ### Workspace System
 
@@ -170,7 +170,7 @@ No active task. **A Direct answer** — pure Q&A / explanation / lookup / chat; 
 Load the `rudder-brainstorm` skill and iterate on prd.md with the user.
 Phase 1.0.5 (conditional, once): if this task involves DDL operations (create/alter tables, add/drop columns, migration scripts), create `{TASK_DIR}/sql/` via `mkdir -p .rudder/tasks/<task-dir>/sql/`. Skip if no database changes.
 Phase 1.3 (required, once): before `task.py start`, you MUST curate `implement.jsonl` and `check.jsonl` — list the spec / research files sub-agents need so they get the right context injected. You may skip only if the jsonl already has agent-curated entries (the seed `_example` row alone doesn't count).
-Then run `task.py start <task-dir>` to flip status to in_progress.
+Before `task.py start`, run `task.py confirm <task-dir>` after the user approves the final `prd.md`; this records the PRD hash and blocks stale or unconfirmed requirements. Then run `task.py start <task-dir>` to flip status to in_progress.
 [/workflow-state:planning]
 
 <!-- Per-turn breadcrumb: shown throughout Phase 1 when codex.dispatch_mode=inline.
@@ -183,12 +183,12 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
 Load the `rudder-brainstorm` skill and iterate on prd.md with the user.
 Phase 1.0.5 (conditional, once): if this task involves DDL operations (create/alter tables, add/drop columns, migration scripts), create `{TASK_DIR}/sql/` via `mkdir -p .rudder/tasks/<task-dir>/sql/`. Skip if no database changes.
 Phase 1.3 jsonl curation is **skipped** in inline dispatch mode — the main session loads `rudder-before-dev` directly in Phase 2 and reads spec context itself, so there is no sub-agent to inject jsonl into.
-Then run `task.py start <task-dir>` to flip status to in_progress.
+Before `task.py start`, run `task.py confirm <task-dir>` after the user approves the final `prd.md`; this records the PRD hash and blocks stale or unconfirmed requirements. Then run `task.py start <task-dir>` to flip status to in_progress.
 [/workflow-state:planning-inline]
 
 ### Phase 2: Execute
-- 2.1 Implement `[required · repeatable]`
-- 2.2 Quality check `[required · repeatable]`
+- 2.1 Implement `[required · repeatable until complete]`
+- 2.2 Verify `[required · after implementation; repeat only after fixes]`
 - 2.3 Rollback `[on demand]`
 
 <!-- Per-turn breadcrumb: shown while status='in_progress'.
@@ -198,7 +198,7 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
 [workflow-state:in_progress]
-**Flow**: rudder-implement → rudder-check (full task diff) → conditional rudder-update-spec → commit (Phase 3.4) → `/rudder:finish-work`.
+**Flow**: finish all implementation work → rudder-check review → Verify (lint/type-check/tests/build) → fix all findings → rerun Verify if needed → conditional rudder-update-spec → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (no override)**: dispatch the `rudder-implement` / `rudder-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 commit (required, once): after rudder-update-spec, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `rudder-implement`, implement directly from the loaded task context and do NOT spawn another `rudder-implement`; if you are already running as `rudder-check`, review/fix directly and do NOT spawn another `rudder-check`. The default dispatch rule applies to the main session only.
 **Sub-agent dispatch protocol (all platforms, all sub-agents)**: When you spawn `rudder-implement` / `rudder-check` / `rudder-research`, your dispatch prompt **MUST** start with one line: `Active task: <task path from \`task.py current\`>`. No exceptions. On class-2 platforms (codex / copilot / gemini / qoder) the sub-agent depends on this line because there is no hook to inject task context. On class-1 platforms (claude / cursor / opencode / kiro / codebuddy / droid) the line is normally redundant — the hook injects context directly — but it serves as a critical fallback when the hook fails (Windows + Claude Code PreToolUse silent skip, `--continue` resume, fork distribution, hooks disabled, etc.). For `rudder-research`, the line tells the sub-agent which `{task_dir}/research/` to write into.
@@ -211,13 +211,13 @@ Then run `task.py start <task-dir>` to flip status to in_progress.
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
-**Flow** (inline mode): main session loads `rudder-before-dev` → main session edits code → main session loads `rudder-check` for the full task diff → run lint / type-check / tests → fix → conditional `rudder-update-spec` → commit (Phase 3.4) → `/rudder:finish-work`.
+**Flow** (inline mode): main session loads `rudder-before-dev` → main session finishes all code changes → main session loads `rudder-check` for the full task diff → Verify lint / type-check / tests / build → fix all findings → rerun Verify if needed → conditional `rudder-update-spec` → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `rudder-implement` / `rudder-check` sub-agents. Load the `rudder-before-dev` skill before writing code; load the `rudder-check` skill before reporting completion.
 Phase 3.4 commit (required, once): after `rudder-update-spec`, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 [/workflow-state:in_progress-inline]
 
 ### Phase 3: Finish
-- 3.1 Quality verification `[folded into 2.2 and commit preamble]`
+- 3.1 Verify evidence `[folded into 2.2 and commit preamble]`
 - 3.2 Debug retrospective `[on demand]`
 - 3.3 Spec update `[conditional · once]`
 - 3.4 Commit changes `[required · once]`
@@ -254,7 +254,7 @@ When a user request matches one of these intents, load the corresponding skill (
 |---|---|
 | Wants a new feature / requirement unclear | `rudder-brainstorm` |
 | About to write code / start implementing | Dispatch the `rudder-implement` sub-agent per Phase 2.1 |
-| Finished writing / want to verify | Dispatch the `rudder-check` sub-agent per Phase 2.2 |
+| Finished all implementation / want to verify | Dispatch the `rudder-check` sub-agent once per Phase 2.2 |
 | Stuck / fixed same bug several times | `rudder-break-loop` |
 | Spec needs update | `rudder-update-spec` |
 
@@ -268,7 +268,7 @@ When a user request matches one of these intents, load the corresponding skill (
 |---|---|
 | Wants a new feature / requirement unclear | `rudder-brainstorm` |
 | About to write code / start implementing | `rudder-before-dev` (then implement directly in the main session) |
-| Finished writing / want to verify | `rudder-check` |
+| Finished all implementation / want to verify | `rudder-check` |
 | Stuck / fixed same bug several times | `rudder-break-loop` |
 | Spec needs update | `rudder-update-spec` |
 
@@ -283,7 +283,7 @@ When a user request matches one of these intents, load the corresponding skill (
 | "This is simple, I'll just code it in the main thread" | Dispatching `rudder-implement` is the cheap path; skipping it tempts you to write code in the main thread and lose spec context — sub-agents get `implement.jsonl` injected, you don't |
 | "I already thought it through in plan mode" | Plan-mode output lives in memory — sub-agents can't see it; must be persisted to prd.md |
 | "I already know the spec" | The spec may have been updated since you last read it; the sub-agent gets the fresh copy, you may not |
-| "Code first, check later" | `rudder-check` surfaces issues you won't notice yourself; earlier is cheaper |
+| "Check after every small change" | Check is a post-implementation gate; finish the complete change set first so the reviewer sees the real cross-file contract |
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
@@ -294,7 +294,7 @@ When a user request matches one of these intents, load the corresponding skill (
 | "This is simple, just code it" | Simple tasks often grow complex; `rudder-before-dev` takes under a minute and loads the spec context you'll need |
 | "I already thought it through in plan mode" | Plan-mode output lives in memory — must be persisted to prd.md before code |
 | "I already know the spec" | The spec may have been updated since you last read it; read again |
-| "Code first, check later" | `rudder-check` surfaces issues you won't notice yourself; earlier is cheaper |
+| "Check after every small change" | Check is a post-implementation gate; finish the complete change set first so the reviewer sees the real cross-file contract |
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
@@ -437,9 +437,10 @@ Skip this step. Context is loaded directly by the `rudder-before-dev` skill in P
 
 #### 1.4 Activate task `[required · once]`
 
-Once prd.md is complete and 1.3 jsonl curation is done, flip the task status to `in_progress`:
+Once prd.md is complete, the user has confirmed it, and 1.3 jsonl curation is done when applicable, confirm and activate the task:
 
 ```bash
+python3 ./.rudder/scripts/task.py confirm <task-dir>
 python3 ./.rudder/scripts/task.py start <task-dir>
 ```
 
@@ -452,6 +453,7 @@ If `task.py start` errors with a session-identity message (no context key from h
 | Condition | Required |
 |------|:---:|
 | `prd.md` exists | ✅ |
+| `prd.md` has acceptance criteria and no unresolved questions/conflicts | ✅ |
 | User confirms requirements | ✅ |
 | `task.py start` has been run (status = in_progress) | ✅ |
 | `research/` has artifacts (complex tasks) | recommended |
@@ -467,16 +469,18 @@ If `task.py start` errors with a session-identity message (no context key from h
 
 ## Phase 2: Execute
 
-Goal: turn the prd into code that passes quality checks.
+Goal: turn the confirmed PRD into code. Project syntax, build, lint, type-check,
+and business acceptance tests are run after implementation during Phase 3;
+`task.py start` performs readiness checks only and does not replace those checks.
 
-#### 2.1 Implement `[required · repeatable]`
+#### 2.1 Implement `[required · repeatable until complete]`
 
 [Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 Spawn the implement sub-agent:
 
 - **Agent type**: `rudder-implement`
-- **Task description**: Implement the requirements per prd.md, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
+- **Task description**: Implement all requirements in prd.md, consulting materials under `{TASK_DIR}/research/`; continue until the complete change set is written and report implementation complete. Do not dispatch `rudder-check` or run the quality gate during this step.
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `rudder-implement` sub-agent and must implement directly, not spawn another `rudder-implement` / `rudder-check`.
 
 The platform hook/plugin auto-handles:
@@ -490,7 +494,7 @@ The platform hook/plugin auto-handles:
 Spawn the implement sub-agent:
 
 - **Agent type**: `rudder-implement`
-- **Task description**: Implement the requirements per prd.md, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
+- **Task description**: Implement all requirements in prd.md, consulting materials under `{TASK_DIR}/research/`; continue until the complete change set is written and report implementation complete. Do not dispatch `rudder-check` or run the quality gate during this step.
 - **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then explicitly say the spawned agent is already `rudder-implement` and must implement directly without spawning another `rudder-implement` / `rudder-check`.
 
 The Codex sub-agent definition auto-handles the context load requirement:
@@ -504,7 +508,7 @@ The Codex sub-agent definition auto-handles the context load requirement:
 Spawn the implement sub-agent:
 
 - **Agent type**: `rudder-implement`
-- **Task description**: Implement the requirements per prd.md, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
+- **Task description**: Implement all requirements in prd.md, consulting materials under `{TASK_DIR}/research/`; continue until the complete change set is written and report implementation complete. Do not dispatch `rudder-check` or run the quality gate during this step.
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `rudder-implement` sub-agent and must implement directly, not spawn another `rudder-implement` / `rudder-check`.
 
 The platform prelude auto-handles the context load requirement:
@@ -518,19 +522,28 @@ The platform prelude auto-handles the context load requirement:
 1. Load the `rudder-before-dev` skill to read project guidelines
 2. Read `{TASK_DIR}/prd.md` for requirements
 3. Consult materials under `{TASK_DIR}/research/`
-4. Implement the code per requirements
-5. Run project lint and type-check
+4. Implement the complete code change per requirements
+5. Report implementation complete; do not load `rudder-check` yet
 
 [/codex-inline, Kilo, Antigravity, Windsurf]
 
-#### 2.2 Quality check `[required · repeatable]`
+#### 2.2 Verify `[required · after implementation; repeat only after fixes]`
+
+**Check/Verify boundary (mandatory):** `Check` is the review of the complete
+diff; `Verify` is the execution of lint, type-check, tests, build, and business
+acceptance commands. Do not dispatch or load `rudder-check` while
+2.1 is still writing code. The implementer must finish the complete
+requirement set first. Then run Check once over the full task diff, followed by
+one Verify pass. If Check or Verify finds issues, fix them and rerun the
+affected stage; do not alternate implementation and verification for individual
+files or partial requirements.
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
 Spawn the check sub-agent:
 
 - **Agent type**: `rudder-check`
-- **Task description**: Review all code changes against spec and prd; fix any findings directly; ensure lint and type-check pass
+- **Task description**: Review the complete implementation diff against spec and prd, then run the Verify commands (lint, type-check, tests, and build). Fix all findings directly. This is the first full Check + Verify pass for the task, not an incremental review.
 - **Dispatch prompt guard**: Tell the spawned agent it is already the `rudder-check` sub-agent and must review/fix directly, not spawn another `rudder-check` / `rudder-implement`.
 
 The check agent's job:
@@ -544,7 +557,7 @@ The check agent's job:
 
 [codex-inline, Kilo, Antigravity, Windsurf]
 
-Load the `rudder-check` skill and verify the code per its guidance:
+Only after the complete implementation is written, load the `rudder-check` skill for the full Check + Verify pass:
 - Spec compliance
 - lint / type-check / tests
 - Compile/build verification (detect project type, run `mvn compile` / `go build` / `cargo check`, fix errors up to 3 rounds)

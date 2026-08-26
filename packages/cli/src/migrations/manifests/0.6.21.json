@@ -1,0 +1,9 @@
+{
+  "version": "0.6.21",
+  "description": "Patch: require a confirmed, internally consistent PRD before implementation and separate complete-diff review from post-implementation verification.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Enhancements:**\n- feat(task): add `task.py confirm <task-dir>` and gate `task.py start` on a confirmed PRD hash, acceptance criteria, resolved open questions, conflict checks, and curated applicable context files.\n- feat(workflow): require the complete implementation batch before Check, then run Verify for lint, type-check, tests, build, and business acceptance commands; failures are fixed and re-verified without incremental per-file checks.\n- feat(config): document a commented `skip_rudder` project-policy placeholder without changing current Fast Path behavior.\n\n**Bug Fixes:**\n- fix(check): Claude and Codex check templates prefer project-declared build commands before generic fallback commands.\n- fix(codex): remove an incompatible project-level multi_agent_v2 configuration that can prevent older Codex clients from loading the repository config.\n\n**Maintenance:**\n- restore and backfill missing historical migration manifests so `rudder update` has a continuous published-version manifest chain.",
+  "migrations": [],
+  "notes": "Run `rudder update` to refresh hash-tracked workflow, task, check-agent, and configuration templates. No migration command is required."
+}

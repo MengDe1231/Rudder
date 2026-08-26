@@ -6,6 +6,13 @@ Comprehensive quality verification for recently written code. Combines spec comp
 
 ## Step 1: Identify What Changed
 
+**Check/Verify boundary (mandatory):** Check reviews the complete task diff;
+Verify executes lint, type-check, tests, build, and business acceptance
+commands. Run this skill only after the implementer has finished the complete
+requirement set and no more planned code remains. Review the full diff, then
+run Verify once. If either stage finds issues, fix them and rerun the affected
+stage; do not alternate between writing one file and verifying it.
+
 ```bash
 git diff --name-only HEAD
 git status
@@ -25,7 +32,7 @@ cat .rudder/spec/<package>/<layer>/index.md
 
 Read the specific guideline files referenced — the index is a pointer, not the goal.
 
-## Step 3: Run Project Checks
+## Step 3: Verify the Complete Implementation
 
 Run the project's lint, type-check, and test commands. Fix any failures before proceeding.
 

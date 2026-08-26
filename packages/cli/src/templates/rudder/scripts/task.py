@@ -7,6 +7,7 @@ Usage:
     python3 task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>]
     python3 task.py add-context <dir> <file> <path> [reason] # Add jsonl entry
     python3 task.py validate <dir>              # Validate jsonl files
+    python3 task.py confirm <dir>               # Confirm PRD requirements
     python3 task.py list-context <dir>          # List jsonl entries
     python3 task.py start <dir>                 # Set active task
     python3 task.py current [--source]          # Show active task
@@ -58,9 +59,11 @@ from common.task_store import (
 )
 from common.task_context import (
     cmd_add_context,
+    cmd_confirm,
     cmd_validate,
     cmd_list_context,
 )
+from common.task_readiness import validate_task_readiness
 
 
 # =============================================================================
@@ -91,6 +94,25 @@ def cmd_start(args: argparse.Namespace) -> int:
         task_dir = str(full_path)
 
     task_json_path = full_path / FILE_TASK_JSON
+
+    if not task_json_path.is_file():
+        print(colored(f"Error: task.json not found at {full_path}", Colors.RED))
+        return 1
+
+    # Only planning -> implementation is gated. Re-running start for an
+    # already active task remains idempotent for existing sessions.
+    task_data = read_json(task_json_path)
+    if not task_data:
+        print(colored(f"Error: task.json is invalid at {full_path}", Colors.RED))
+        return 1
+    if task_data and task_data.get("status") == "planning":
+        readiness_errors = validate_task_readiness(full_path, repo_root, task_data)
+        if readiness_errors:
+            print(colored("Task is not ready for implementation:", Colors.RED))
+            for error in readiness_errors:
+                print(f"  - {error}")
+            print("Hint: complete the PRD, run task.py confirm, then retry task.py start.")
+            return 1
 
     if not resolve_context_key():
         # Degraded mode: no session identity available.
@@ -309,6 +331,7 @@ Usage:
   python3 task.py create <title> --parent <dir>      Create task as child of parent
   python3 task.py add-context <dir> <jsonl> <path> [reason]  Add entry to jsonl
   python3 task.py validate <dir>                     Validate jsonl files
+  python3 task.py confirm <dir>                      Confirm requirements and PRD
   python3 task.py list-context <dir>                 List jsonl entries
   python3 task.py start <dir>                        Set active task
   python3 task.py current [--source]                 Show active task
@@ -410,6 +433,10 @@ def main() -> int:
     p_validate = subparsers.add_parser("validate", help="Validate context files")
     p_validate.add_argument("dir", help="Task directory")
 
+    # confirm
+    p_confirm = subparsers.add_parser("confirm", help="Confirm task requirements")
+    p_confirm.add_argument("dir", help="Task directory")
+
     # list-context
     p_listctx = subparsers.add_parser("list-context", help="List context entries")
     p_listctx.add_argument("dir", help="Task directory")
@@ -475,6 +502,7 @@ def main() -> int:
         "create": cmd_create,
         "add-context": cmd_add_context,
         "validate": cmd_validate,
+        "confirm": cmd_confirm,
         "list-context": cmd_list_context,
         "start": cmd_start,
         "current": cmd_current,

@@ -49,6 +49,7 @@ class TaskData(TypedDict, total=False):
     relatedFiles: list[str]
     notes: str
     meta: dict
+    requirements: dict
 
 
 # =============================================================================

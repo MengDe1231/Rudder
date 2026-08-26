@@ -19,11 +19,52 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .log import Colors, colored
-from .paths import get_repo_root
+from .paths import get_developer, get_repo_root
 from .task_utils import resolve_task_dir
+from .task_readiness import prd_hash, validate_prd
+
+
+def cmd_confirm(args: argparse.Namespace) -> int:
+    """Record explicit user confirmation for the current PRD."""
+    repo_root = get_repo_root()
+    target_dir = resolve_task_dir(args.dir, repo_root)
+    task_json = target_dir / "task.json"
+    prd_path = target_dir / "prd.md"
+    if not target_dir.is_dir() or not task_json.is_file():
+        print(colored("Error: task directory with task.json required", Colors.RED))
+        return 1
+
+    try:
+        existing_data = json.loads(task_json.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        print(colored(f"Error: failed to read {task_json}", Colors.RED))
+        return 1
+    if existing_data.get("status") != "planning":
+        print(colored("Error: requirements can only be confirmed while task is planning", Colors.RED))
+        return 1
+
+    errors = validate_prd(prd_path)
+    if errors:
+        print(colored("Requirements are not ready for confirmation:", Colors.RED))
+        for error in errors:
+            print(f"  - {error}")
+        return 1
+
+    developer = get_developer(repo_root) or "unknown"
+    data = existing_data
+    data["requirements"] = {
+        "status": "confirmed",
+        "confirmed_by": developer,
+        "confirmed_at": datetime.now(timezone.utc).isoformat(),
+        "prd_hash": prd_hash(prd_path),
+    }
+    task_json.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(colored(f"Requirements confirmed for: {target_dir.name}", Colors.GREEN))
+    return 0
 
 
 # =============================================================================

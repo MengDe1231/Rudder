@@ -14,6 +14,7 @@
 
 import { execSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1320,6 +1321,11 @@ describe("regression: current-task path normalization", () => {
       path.join(".rudder", "tasks", "issue-106", "implement.jsonl"),
       '{"file":"src/example.ts","reason":"runtime regression"}\n',
     );
+    writeProjectFile(
+      path.join(".rudder", "tasks", "issue-106", "check.jsonl"),
+      '{"file":"src/example.ts","reason":"runtime regression"}\n',
+    );
+    writeProjectFile(path.join("src", "example.ts"), "export const example = true;\n");
   }
 
   function runPython(
@@ -1355,6 +1361,43 @@ describe("regression: current-task path normalization", () => {
     expect(context).toContain(".rudder/tasks/*");
     expect(context).toContain("main interactive Codex session");
   }
+
+  it("[task-readiness] task.py start blocks an unconfirmed or conflicting PRD", () => {
+    setupTaskRepo();
+    const taskJsonPath = path.join(
+      tmpDir,
+      ".rudder",
+      "tasks",
+      "issue-106",
+      "task.json",
+    );
+    const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
+    taskJson.status = "planning";
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    fs.writeFileSync(
+      path.join(tmpDir, ".rudder", "tasks", "issue-106", "prd.md"),
+      "# PRD\n\n## Acceptance Criteria\n\n- [ ] Auto-save after every edit\n- [ ] User clicks Save to persist\n",
+      "utf-8",
+    );
+
+    const taskScriptPath = path.join(tmpDir, ".rudder", "scripts", "task.py");
+    let output = "";
+    let status = 0;
+    try {
+      output = execSync(
+        `${pythonCmd} ${JSON.stringify(taskScriptPath)} start ${JSON.stringify(".rudder\\\\tasks\\\\issue-106")}`,
+        { cwd: tmpDir, encoding: "utf-8", env: sessionEnv() },
+      );
+    } catch (err) {
+      const e = err as { status?: number; stdout?: string; stderr?: string };
+      status = e.status ?? 1;
+      output = (e.stdout ?? "") + (e.stderr ?? "");
+    }
+    expect(status).toBe(1);
+    expect(output).toContain("requirements are not confirmed");
+    expect(output).toContain("conflicting rules");
+    expect(JSON.parse(fs.readFileSync(taskJsonPath, "utf-8")).status).toBe("planning");
+  });
 
   it("[session-current-task] task.py start without context key enters degraded mode (returns 0, no pointer)", () => {
     // 0.5.3 hotfix: task.py start no longer hard-fails when no session identity
@@ -1413,6 +1456,25 @@ describe("regression: current-task path normalization", () => {
     );
     const taskJson = JSON.parse(fs.readFileSync(taskJsonPath, "utf-8"));
     taskJson.status = "planning";
+    fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
+    const prdPath = path.join(
+      tmpDir,
+      ".rudder",
+      "tasks",
+      "issue-106",
+      "prd.md",
+    );
+    fs.writeFileSync(
+      prdPath,
+      "# PRD\n\n## Acceptance Criteria\n\n- [ ] Existing behavior remains compatible\n",
+      "utf-8",
+    );
+    taskJson.requirements = {
+      status: "confirmed",
+      confirmed_by: "test-dev",
+      confirmed_at: "2026-03-27T00:00:00Z",
+      prd_hash: crypto.createHash("sha256").update(fs.readFileSync(prdPath)).digest("hex"),
+    };
     fs.writeFileSync(taskJsonPath, JSON.stringify(taskJson, null, 2), "utf-8");
 
     const taskScriptPath = path.join(tmpDir, ".rudder", "scripts", "task.py");
@@ -1602,6 +1664,21 @@ describe("regression: current-task path normalization", () => {
       status: string;
     };
     expect(beforeStart.status).toBe("planning");
+
+    const prdPath = path.join(tmpDir, ".rudder", "tasks", taskDir as string, "prd.md");
+    fs.writeFileSync(
+      prdPath,
+      "# PRD\n\n## Acceptance Criteria\n\n- [ ] Task can be activated\n",
+      "utf-8",
+    );
+    execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} confirm ${JSON.stringify(relTaskDir)}`,
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ RUDDER_CONTEXT_ID: "r7-idem-session" }),
+      },
+    );
 
     // Now run start with the same session — must not error.
     let startStatus = 0;
@@ -5789,6 +5866,9 @@ describe("regression: configSectionsAdded (issue-codex-dispatch-mode)", () => {
     const tmpl = fs.readFileSync(tmplPath, "utf-8");
     expect(tmpl).toContain("# Codex (dispatch behavior)");
     expect(tmpl).toContain("dispatch_mode");
+    expect(tmpl).toContain("# Explicit Rudder bypass");
+    expect(tmpl).toContain("# skip_rudder:");
+    expect(tmpl).toContain("#   enabled: false");
   });
 });
 

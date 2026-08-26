@@ -1,0 +1,9 @@
+{
+  "version": "0.5.30",
+  "description": "Historical manifest continuity backfill.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Maintenance:**\n- This version was published without a migration manifest. The shipped npm tarball contains no recoverable version-specific migration metadata.\n- This backfill preserves a continuous update chain without inventing migration actions.",
+  "migrations": [],
+  "notes": "No recoverable version-specific migration is available. Run `rudder update` to refresh current hash-tracked templates."
+}

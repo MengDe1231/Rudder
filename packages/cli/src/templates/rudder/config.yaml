@@ -113,6 +113,17 @@ max_journal_lines: 2000
 #   skip_keyword: "skip rudder"   # empty string disables the configured alias
 
 #-------------------------------------------------------------------------------
+# Explicit Rudder bypass
+#-------------------------------------------------------------------------------
+# This is intentionally commented out and reserved as a project-level policy
+# placeholder. The default behavior remains unchanged: an explicit user request
+# such as "skip rudder" may skip the per-turn workflow breadcrumb for that turn.
+# The current runtime does not read this placeholder.
+#
+# skip_rudder:
+#   enabled: false
+
+#-------------------------------------------------------------------------------
 # Sub-agent context injection limits
 #-------------------------------------------------------------------------------
 # Context is truncated safely at UTF-8 boundaries. Once the total budget is

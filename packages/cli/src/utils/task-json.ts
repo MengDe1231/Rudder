@@ -34,6 +34,12 @@ export interface TaskJson {
   relatedFiles: string[];
   notes: string;
   meta: Record<string, unknown>;
+  requirements?: {
+    status: string;
+    confirmed_by: string | null;
+    confirmed_at: string | null;
+    prd_hash: string | null;
+  };
 }
 
 /**
@@ -71,6 +77,12 @@ export function emptyTaskJson(overrides: Partial<TaskJson> = {}): TaskJson {
     relatedFiles: [],
     notes: "",
     meta: {},
+    requirements: {
+      status: "pending",
+      confirmed_by: null,
+      confirmed_at: null,
+      prd_hash: null,
+    },
   };
   return { ...base, ...overrides };
 }
