@@ -28,7 +28,7 @@
     "typecheck": "tsc --noEmit",
     "lint:py": "basedpyright",
     "lint:all": "pnpm lint && pnpm lint:py",
-    "prepublishOnly": "pnpm test && pnpm run build && cp ../../README.md ../../LICENSE .",
+    "prepublishOnly": "pnpm test && pnpm run build && node -e \"const fs=require('node:fs'); fs.copyFileSync('../../README.md','README.md'); fs.copyFileSync('../../LICENSE','LICENSE')\"",
     "release": "node scripts/check-manifest-continuity.js && pnpm test && git add -A -- ':!docs-site' && (git diff-index --quiet HEAD || git commit -m 'chore: pre-release updates') && pnpm version --no-git-tag-version patch && V=$(node -p \"require('./package.json').version\") && git add package.json && git commit -m \"$V\" && git tag \"v$V\" && git push origin main --tags",
     "release:minor": "node scripts/check-manifest-continuity.js && pnpm test && git add -A -- ':!docs-site' && (git diff-index --quiet HEAD || git commit -m 'chore: pre-release updates') && pnpm version --no-git-tag-version minor && V=$(node -p \"require('./package.json').version\") && git add package.json && git commit -m \"$V\" && git tag \"v$V\" && git push origin main --tags",
     "release:major": "node scripts/check-manifest-continuity.js && pnpm test && git add -A -- ':!docs-site' && (git diff-index --quiet HEAD || git commit -m 'chore: pre-release updates') && pnpm version --no-git-tag-version major && V=$(node -p \"require('./package.json').version\") && git add package.json && git commit -m \"$V\" && git tag \"v$V\" && git push origin main --tags",
