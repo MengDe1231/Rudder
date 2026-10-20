@@ -44,6 +44,8 @@ The Rudder task system is stored entirely under `.rudder/tasks/` in the user pro
 
 The AI should not treat phase numbers as task status. Task progress is mainly determined by `status`, `prd.md`, whether JSONL context is configured, and the phase descriptions in `workflow.md`.
 
+Task ownership follows business objective and acceptance scope. An active pointer alone does not make a new request part of that task. Reuse related unfinished work, including design-to-development; create separate tracked tasks for independent objectives. Direct answers, scheduler administration, commit-message drafting, and clear/local/low-risk independent edits follow direct routing in `workflow.md`.
+
 ## Active Task
 
 The user sees a "current task," but Rudder stores active task state per session.
@@ -69,6 +71,8 @@ Format:
 
 Rules:
 
+- JSONL is required only for the invoking platform's sub-agent execution mode. `task.py create` and `start` share `common.workflow_phase.requires_task_context`; explicit `--platform` takes precedence over `RUDDER_PLATFORM`, then conservative configured-platform detection. Codex uses `codex.dispatch_mode` (default inline).
+- Inline startup ignores existing seed files; sub-agent startup requires both valid curated files even if neither exists. PRD completeness and confirmation/hash checks apply to both modes.
 - Include spec and research files.
 - Do not include code files that are about to be modified.
 - Do not treat temporary conclusions in chat as the only context.
@@ -77,8 +81,9 @@ Rules:
 ## Common Commands
 
 ```bash
-python3 ./.rudder/scripts/task.py create "<title>" --slug <slug>
-python3 ./.rudder/scripts/task.py start <task>
+python3 ./.rudder/scripts/task.py create "<title>" --slug <slug> --platform <platform>
+python3 ./.rudder/scripts/task.py confirm <task>
+python3 ./.rudder/scripts/task.py start <task> --platform <platform>
 python3 ./.rudder/scripts/task.py current --source
 python3 ./.rudder/scripts/task.py add-context <task> implement <file> <reason>
 python3 ./.rudder/scripts/task.py validate <task>

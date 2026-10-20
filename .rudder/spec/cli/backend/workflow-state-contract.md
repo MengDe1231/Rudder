@@ -144,6 +144,85 @@ the current packaged template so `--platform codex` can resolve to
 
 ---
 
+## Request Ownership and Implementation Readiness
+
+### 1. Scope / Trigger
+
+Applies when changing task routing, start/continue/brainstorm instructions,
+Codex dispatch modes, task creation, or implementation readiness gates.
+
+### 2. Signatures
+
+- `task.py create "<title>" --slug <slug> [--platform <platform>]`
+- `task.py confirm <task>`
+- `task.py start <task> [--platform <platform>]`
+- `requires_task_context(repo_root: Path, platform: str | None = None) -> bool`
+- `validate_task_readiness(task_dir, repo_root, task_data, platform=None) -> list[str]`
+
+### 3. Contracts
+
+- Request routing precedes phase execution. Task identity follows business
+  objective and acceptance scope; an active pointer, shared module, or shared
+  conversation does not establish relevance.
+- Related unfinished supplements/fixes/continuation and design-to-development
+  reuse the task. Independent objectives needing planning get separate tasks;
+  direct questions/inspection/commit wording and clear/local/low-risk independent
+  edits do not create or advance tasks.
+- An explicit instruction to implement the clearly agreed plan counts as user
+  approval. `confirm` records it; it does not replace approval of new business
+  decisions. The whole-PRD SHA-256 gate remains unchanged.
+- Creation and startup use the same `requires_task_context` helper. Explicit
+  `--platform` wins over `RUDDER_PLATFORM`; without either, any configured
+  sub-agent mode requires context. Mixed-platform callers pass their actual
+  platform rather than using the directory order as session identity.
+- Codex uses `resolve_effective_platform`: absent/invalid dispatch settings
+  resolve to inline. Kilo, Antigravity, and Windsurf are also inline. Unknown
+  explicit/environment platforms fail clearly rather than bypassing context.
+- Planning readiness always validates PRD completeness and confirmation/hash.
+  Only sub-agent execution requires valid curated `implement.jsonl` AND
+  `check.jsonl`. File presence must not decide execution mode.
+- Failed startup keeps status `planning` and does not switch the pointer.
+  Existing in-progress `start` remains idempotent. No new lifecycle/status
+  writer is introduced.
+
+### 4. Validation & Error Matrix
+
+| Invocation / State | Required result |
+| --- | --- |
+| Codex inline; no JSONL or existing seed rows | Startup allowed if PRD/approval checks pass |
+| Explicit Codex inline in a repository also containing `.claude/` | Same inline policy; other installed platforms do not override the caller |
+| Sub-agent mode; either/both JSONL absent, seed-only, malformed, or referencing absent files | Startup blocked with context errors |
+| Inline; unconfirmed PRD, stale hash, missing acceptance, or open decisions | Startup blocked with PRD/approval errors |
+| New task created while another task is active | Only this session pointer changes; previous task artifacts/status are preserved |
+
+### 5. Good / Base / Bad Cases
+
+- Good: `start <task> --platform codex` ignores historical seeds in inline mode.
+- Base: directory fallback in a mixed repository requires context conservatively.
+- Bad: create decides from installed directories while start decides from JSONL
+  existence, or resume infers implementation readiness merely from PRD presence.
+
+### 6. Tests Required
+
+`test/templates/task-readiness.test.ts` executes generated scripts to cover
+create/confirm/start, dispatch settings, mixed repositories, platform precedence,
+old seed files, missing/invalid context, preserved PRD gates, and session switching.
+Prompt policy also requires reviewing direct/reuse/new and design-to-development
+scenarios across workflow/start/continue/brainstorm; string assertions do not
+prove model compliance.
+
+### 7. Wrong vs Correct
+
+```python
+# Wrong: seed files accidentally force inline sessions into sub-agent rules.
+if (task_dir / "implement.jsonl").exists():
+    require_curated_context()
+
+# Correct: creation and startup use the same invoking-mode policy.
+if requires_task_context(repo_root, platform):
+    require_both_curated_context_files()
+```
+
 ## Status writer table
 
 The table below enumerates every code path that writes `task.json.status` —

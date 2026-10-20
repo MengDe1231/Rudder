@@ -53,6 +53,7 @@ from .task_utils import (
     resolve_task_dir,
     run_task_hooks,
 )
+from .workflow_phase import requires_task_context
 
 
 # =============================================================================
@@ -87,44 +88,12 @@ def ensure_tasks_dir(repo_root: Path) -> Path:
 # Sub-agent platform detection + JSONL seeding
 # =============================================================================
 
-# Config directories of platforms that consume implement.jsonl / check.jsonl.
-# Keep in sync with src/types/ai-tools.ts AI_TOOLS entries — these are the
-# platforms listed in workflow.md's "agent-capable" Skill Routing block
-# (Class-1 hook-inject + Class-2 pull-based preludes). Kilo / Antigravity /
-# Windsurf are NOT in this list: they do not consume JSONL.
-_SUBAGENT_CONFIG_DIRS: tuple[str, ...] = (
-    ".claude",
-    ".cursor",
-    ".codex",
-    ".kiro",
-    ".gemini",
-    ".opencode",
-    ".qoder",
-    ".codebuddy",
-    ".factory",   # Factory Droid
-    ".github/copilot",
-    ".pi",        # Pi Agent
-)
-
 _SEED_EXAMPLE = (
     "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. "
     "Put spec/research files only — no code paths. "
     "Run `python3 .rudder/scripts/get_context.py --mode packages` to list available specs. "
     "Delete this line once real entries are added."
 )
-
-
-def _has_subagent_platform(repo_root: Path) -> bool:
-    """Return True if any sub-agent-capable platform is configured.
-
-    Detected by probing well-known config directories at the repo root. Used
-    only to decide whether ``task.py create`` should seed empty
-    ``implement.jsonl`` / ``check.jsonl`` files.
-    """
-    for config_dir in _SUBAGENT_CONFIG_DIRS:
-        if (repo_root / config_dir).is_dir():
-            return True
-    return False
 
 
 def _write_seed_jsonl(path: Path) -> None:
@@ -145,6 +114,15 @@ def _write_seed_jsonl(path: Path) -> None:
 def cmd_create(args: argparse.Namespace) -> int:
     """Create a new task."""
     repo_root = get_repo_root()
+
+    # Resolve before writing task files; an invalid platform must not leave a
+    # partially created task behind.
+    platform = getattr(args, "platform", None)
+    try:
+        context_required = requires_task_context(repo_root, platform)
+    except ValueError as exc:
+        print(colored(f"Error: {exc}", Colors.RED), file=sys.stderr)
+        return 1
 
     if not args.title:
         print(colored("Error: title is required", Colors.RED), file=sys.stderr)
@@ -239,12 +217,12 @@ def cmd_create(args: argparse.Namespace) -> int:
 
     write_json(task_json_path, task_data)
 
-    # Seed implement.jsonl / check.jsonl for sub-agent-capable platforms.
+    # Seed implement.jsonl / check.jsonl only for this execution mode.
     # Agent curates real entries in Phase 1.3 (see .rudder/workflow.md).
     # Agent-less platforms (Kilo / Antigravity / Windsurf) skip this — they
     # load specs via the rudder-before-dev skill instead of JSONL.
     seeded_jsonl = False
-    if _has_subagent_platform(repo_root):
+    if context_required:
         for jsonl_name in ("implement.jsonl", "check.jsonl"):
             jsonl_path = task_dir / jsonl_name
             if not jsonl_path.exists():
@@ -292,6 +270,7 @@ def cmd_create(args: argparse.Namespace) -> int:
     print(colored(f"Created task: {dir_name}", Colors.GREEN), file=sys.stderr)
     print("", file=sys.stderr)
     print(colored("Next steps:", Colors.BLUE), file=sys.stderr)
+    platform_option = f" --platform {platform}" if platform else ""
     print("  1. Create prd.md with requirements", file=sys.stderr)
     if seeded_jsonl:
         print(
@@ -300,10 +279,10 @@ def cmd_create(args: argparse.Namespace) -> int:
             file=sys.stderr,
         )
         print("  3. Run: python3 task.py confirm <dir>", file=sys.stderr)
-        print("  4. Run: python3 task.py start <dir>", file=sys.stderr)
+        print(f"  4. Run: python3 task.py start <dir>{platform_option}", file=sys.stderr)
     else:
         print("  2. Run: python3 task.py confirm <dir>", file=sys.stderr)
-        print("  3. Run: python3 task.py start <dir>", file=sys.stderr)
+        print(f"  3. Run: python3 task.py start <dir>{platform_option}", file=sys.stderr)
     print("", file=sys.stderr)
 
     # Output relative path for script chaining

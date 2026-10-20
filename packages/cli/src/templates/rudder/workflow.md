@@ -43,8 +43,8 @@ Every task has its own directory under `.rudder/tasks/{MM-DD-name}/` holding `pr
 
 ```bash
 # Task lifecycle
-python3 ./.rudder/scripts/task.py create "<title>" [--slug <name>] [--parent <dir>]
-python3 ./.rudder/scripts/task.py start <name>          # set active task (session-scoped when available)
+python3 ./.rudder/scripts/task.py create "<title>" [--slug <name>] [--parent <dir>] --platform <platform>
+python3 ./.rudder/scripts/task.py start <name> --platform <platform>  # validate readiness and enter implementation
 python3 ./.rudder/scripts/task.py current --source      # show active task and source
 python3 ./.rudder/scripts/task.py finish                # clear active task (triggers after_finish hooks)
 python3 ./.rudder/scripts/task.py archive <name>        # move to archive/{year-month}/
@@ -72,6 +72,8 @@ python3 ./.rudder/scripts/task.py create-pr [name] [--dry-run]
 ```
 
 > Run `python3 ./.rudder/scripts/task.py --help` to see the authoritative, up-to-date list.
+
+Replace `<platform>` with the invoking CLI flag (e.g. `codex`, `claude`, `cursor`). Creation and startup share the same context policy: explicit `--platform` takes precedence over `RUDDER_PLATFORM`; without either, any configured sub-agent mode requires JSONL. Pass the invoking platform in mixed-platform repositories. Codex resolves `codex.dispatch_mode` (default `inline`); inline execution does not require JSONL even when old seed files exist, while sub-agent execution requires both curated context files even when they are missing.
 
 **Current-task mechanism**: `task.py create` creates the task directory and (when session identity is available) auto-sets the per-session active-task pointer so the planning breadcrumb fires immediately. After the final PRD is confirmed with `task.py confirm`, `task.py start` writes the same pointer (idempotent if already set) and flips `task.json.status` from `planning` to `in_progress`; it refuses to start when the PRD, confirmation hash, acceptance criteria, or applicable JSONL context is incomplete. State is stored under `.rudder/.runtime/sessions/`. If no context key is available, start still performs the readiness gate and then uses degraded mode without persisting a session pointer. `task.py finish` deletes the current session file (status unchanged). `task.py archive <task>` writes `status=completed`, moves the directory to `archive/`, and deletes any runtime session files that still point at the archived task.
 
@@ -147,12 +149,28 @@ Phase 2: Execute → write code and pass quality checks
 Phase 3: Finish  → distill lessons + wrap-up
 ```
 
+### Request routing (before every phase)
+
+Decide what the user is asking for before following an active task's phase. Task boundaries follow **business objective and acceptance scope**, not the conversation, module, file count, or mere presence of an active pointer.
+
+Apply these rules in order:
+
+1. **Direct answer/action**: questions, explanations, code inspection, scheduler/Cron administration, and commit-message drafting do not create or advance a task. Only provide the requested output/action; a request for commit wording is not permission to commit or archive. Developing a scheduled business feature still follows the rules below. Read depth and answer length do not determine whether a task is needed.
+2. **Reuse related unfinished work**: read the candidate task's goal, requirements, acceptance criteria, and status. Supplements, corrections, fixes before acceptance, continuation, and moving from design to development reuse that task and update relevant artifacts. Check current and other unfinished tasks as needed; same session/module alone does not establish relevance. Reuse takes priority over treating a related correction as a separate quick edit. If ownership is genuinely ambiguous, ask one focused question.
+3. **Direct low-risk edit**: a clear, local, low-risk independent change can be made directly with the relevant guidelines and smallest meaningful validation. No special bypass phrase is required. Assess behavior and contracts, not number of files; changes to permissions, data structures, API contracts, transactions, caches, or cross-module business rules need the task workflow.
+4. **New tracked objective**: create a task for an independent business objective needing durable planning and its own acceptance outcome. An unrelated active task must not absorb it. Leave the previous task's artifacts/status intact; task creation can switch this session's pointer. For defects after a task was completed/archived, normally create a linked follow-up rather than rewriting historical acceptance.
+
+**Approval reuse**: an explicit instruction such as “implement this plan” / “按方案开发” approves the clearly agreed requirements. Record that approval with `task.py confirm` and proceed; do not ask the same question again at each phase. Ask only when a new business decision or a material scope/acceptance change needs user input. Implementation details do not need repeated approval. The existing PRD hash gate still applies: update the confirmation record while planning when the agreed PRD changes; never invent approval for new requirements.
+
 <!-- Per-turn breadcrumb: shown when there is no active task (before Phase 1) -->
 
 [workflow-state:no_task]
-No active task. **A Direct answer** — pure Q&A / explanation / lookup / chat; no file writes + one-line answer + repo reads ≤ 2 files → AI judges, no override needed.
-**B Create a task** — implementation / code change / build / refactor work that is not an explicit Fast Path or requires a durable task record. Entry sequence: create the task, load `rudder-brainstorm`, complete the PRD and required context, then run `task.py start <task-dir>`.
-**C Inline change** (per-turn fast path) — the user's CURRENT message may explicitly contain one of: "skip rudder" / "no task" / "just do it" / "don't create a task" / "跳过 rudder" / "别走流程" / "小修一下" / "直接改" / "先别建任务". When present, acknowledge briefly, skip task creation and per-turn workflow injection, then make the requested low-risk change and run the smallest relevant validation. This is not permission to bypass safety checks for database, API, permission, transaction, cache, or cross-module changes.
+No active task. Apply Request routing by business objective and acceptance scope.
+For development requests, check related unfinished work (B) before choosing a direct independent edit (A) or creating a task (C).
+**A Direct work** — questions, code inspection, scheduler administration, commit-message drafting, or clear/local/low-risk independent edits: answer or act directly with necessary validation; no task, no phase advancement, no file-count/read-depth limits. Commit wording alone never authorizes a Git commit.
+**B Reuse** — supplements, corrections, fixes, continuation, or design-to-development serving an existing unfinished goal reuse that task and its PRD; same session/module alone is insufficient. Check unfinished tasks before creating another.
+**C New task** — an independent objective needing durable planning and its own acceptance outcome gets a new task. Create → complete PRD and applicable context → confirm already-approved requirements → start with `--platform <platform>`. Do not repeat approval already given for the agreed plan.
+An explicit per-turn bypass (e.g. "skip rudder", "no task", "直接改", "先别建任务") also allows the requested low-risk edit. It does not bypass necessary safety checks for database, API, permission, transaction, cache, or cross-module changes.
 [/workflow-state:no_task]
 
 ### Phase 1: Plan
@@ -167,10 +185,11 @@ No active task. **A Direct answer** — pure Q&A / explanation / lookup / chat; 
 <!-- Per-turn breadcrumb: shown throughout Phase 1 (status='planning') -->
 
 [workflow-state:planning]
+First apply Request routing: questions/inspection/scheduler administration/commit wording are direct requests; related work reuses this task; an unrelated objective needs its own task unless it is a clear/local/low-risk direct edit. Never infer task ownership from session/module alone.
 Load the `rudder-brainstorm` skill and iterate on prd.md with the user.
 Phase 1.0.5 (conditional, once): if this task involves DDL operations (create/alter tables, add/drop columns, migration scripts), create `{TASK_DIR}/sql/` via `mkdir -p .rudder/tasks/<task-dir>/sql/`. Skip if no database changes.
 Phase 1.3 (required, once): before `task.py start`, you MUST curate `implement.jsonl` and `check.jsonl` — list the spec / research files sub-agents need so they get the right context injected. You may skip only if the jsonl already has agent-curated entries (the seed `_example` row alone doesn't count).
-Before `task.py start`, run `task.py confirm <task-dir>` after the user approves the final `prd.md`; this records the PRD hash and blocks stale or unconfirmed requirements. Then run `task.py start <task-dir>` to flip status to in_progress.
+Before `task.py start`, run `task.py confirm <task-dir>` after the user approves the final `prd.md`; an existing instruction to implement the agreed plan counts, so do not ask again. This records the PRD hash and blocks stale or unconfirmed requirements. Then run `task.py start <task-dir> --platform <platform>` to flip status to in_progress. PRD existence alone does not mean planning is complete.
 [/workflow-state:planning]
 
 <!-- Per-turn breadcrumb: shown throughout Phase 1 when codex.dispatch_mode=inline.
@@ -180,10 +199,11 @@ Before `task.py start`, run `task.py confirm <task-dir>` after the user approves
      into a sub-agent. -->
 
 [workflow-state:planning-inline]
+First apply Request routing: questions/inspection/scheduler administration/commit wording are direct requests; related work reuses this task; an unrelated objective needs its own task unless it is a clear/local/low-risk direct edit. Never infer task ownership from session/module alone.
 Load the `rudder-brainstorm` skill and iterate on prd.md with the user.
 Phase 1.0.5 (conditional, once): if this task involves DDL operations (create/alter tables, add/drop columns, migration scripts), create `{TASK_DIR}/sql/` via `mkdir -p .rudder/tasks/<task-dir>/sql/`. Skip if no database changes.
 Phase 1.3 jsonl curation is **skipped** in inline dispatch mode — the main session loads `rudder-before-dev` directly in Phase 2 and reads spec context itself, so there is no sub-agent to inject jsonl into.
-Before `task.py start`, run `task.py confirm <task-dir>` after the user approves the final `prd.md`; this records the PRD hash and blocks stale or unconfirmed requirements. Then run `task.py start <task-dir>` to flip status to in_progress.
+Before `task.py start`, run `task.py confirm <task-dir>` after the user approves the final `prd.md`; an existing instruction to implement the agreed plan counts, so do not ask again. This records the PRD hash and blocks stale or unconfirmed requirements. Then run `task.py start <task-dir> --platform codex` to flip status to in_progress. Existing JSONL seed files do not block inline startup. PRD existence alone does not mean planning is complete.
 [/workflow-state:planning-inline]
 
 ### Phase 2: Execute
@@ -198,6 +218,7 @@ Before `task.py start`, run `task.py confirm <task-dir>` after the user approves
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
 [workflow-state:in_progress]
+First apply Request routing: questions/inspection/scheduler administration/commit wording do not advance this task; related corrections/continuation reuse it; unrelated objectives get their own task unless they qualify for direct low-risk work. Same session/module does not establish relevance. Already-approved requirements do not need another approval.
 **Flow**: finish all implementation work → rudder-check review → Verify (lint/type-check/tests/build) → fix all findings → rerun Verify if needed → conditional rudder-update-spec → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (no override)**: dispatch the `rudder-implement` / `rudder-check` sub-agents — the main agent does NOT edit code by default. Phase 3.4 commit (required, once): after rudder-update-spec, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
 **Sub-agent self-exemption**: if you are already running as `rudder-implement`, implement directly from the loaded task context and do NOT spawn another `rudder-implement`; if you are already running as `rudder-check`, review/fix directly and do NOT spawn another `rudder-check`. The default dispatch rule applies to the main session only.
@@ -211,6 +232,7 @@ Before `task.py start`, run `task.py confirm <task-dir>` after the user approves
      instead of dispatching sub-agents. -->
 
 [workflow-state:in_progress-inline]
+First apply Request routing: questions/inspection/scheduler administration/commit wording do not advance this task; related corrections/continuation reuse it; unrelated objectives get their own task unless they qualify for direct low-risk work. Same session/module does not establish relevance. Already-approved requirements do not need another approval.
 **Flow** (inline mode): main session loads `rudder-before-dev` → main session finishes all code changes → main session loads `rudder-check` for the full task diff → Verify lint / type-check / tests / build → fix all findings → rerun Verify if needed → conditional `rudder-update-spec` → commit (Phase 3.4) → `/rudder:finish-work`.
 **Main-session default (inline dispatch_mode)**: the main agent edits code directly. Do NOT dispatch `rudder-implement` / `rudder-check` sub-agents. Load the `rudder-before-dev` skill before writing code; load the `rudder-check` skill before reporting completion.
 Phase 3.4 commit (required, once): after `rudder-update-spec`, or whenever implementation is verifiably complete, the main agent **drives the commit** — run `git diff --stat` to show changes, state the proposed commit message, then check `code_auto_commit` in `.rudder/config.yaml`: if **false** (default), **ask the user for confirmation (Y/n)** before running `git commit`; if **true**, commit directly without prompting. Only after commit, suggest `/rudder:finish-work`. `/finish-work` refuses to run on a dirty working tree (paths outside `.rudder/workspace/` and `.rudder/tasks/`).
@@ -232,6 +254,7 @@ Phase 3.4 commit (required, once): after `rudder-update-spec`, or whenever imple
      channel as the live blocks. -->
 
 [workflow-state:completed]
+First apply Request routing. Answer questions/inspection/commit-wording requests directly; do not attach independent new work to this completed task. Normally track post-completion defects as linked follow-ups.
 Code committed via Phase 3.4; run `/rudder:finish-work` to wrap up (archive the task + record session).
 If you reach this state with uncommitted code, return to Phase 3.4 first — `/finish-work` refuses to run on a dirty working tree.
 `task.py archive` deletes any runtime session files that still point at the archived task.
@@ -239,14 +262,14 @@ If you reach this state with uncommitted code, return to Phase 3.4 first — `/f
 
 ### Rules
 
-1. Identify which Phase you're in, then continue from the next step there
+1. Apply Request routing, establish task relevance, then identify the phase and next step
 2. Run steps in order inside each Phase; `[required]` steps can't be skipped
 3. Phases can roll back (e.g., Execute reveals a prd defect → return to Plan to fix, then re-enter Execute)
-4. Steps tagged `[once]` are skipped if the output already exists; don't re-run
+4. Skip `[once]` steps only when their completion conditions hold. PRD existence alone is insufficient; require resolved requirements, current approval/confirmation, and both valid curated JSONL files when applicable.
 
 ### Skill Routing
 
-When a user request matches one of these intents, load the corresponding skill (or dispatch the corresponding sub-agent) first — do not skip skills.
+After Request routing selects tracked work, use the skill/sub-agent routes below. Direct low-risk edits read relevant guidelines (via `rudder-before-dev` where available) and run the smallest meaningful validation; they do not enter task creation, sub-agent dispatch, or finish/commit phases automatically.
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
@@ -318,7 +341,7 @@ Goal: figure out what to build, produce a clear requirements doc and the context
 Create the task directory (status enters `planning`, the session active-task pointer auto-targets the new task when session identity is available):
 
 ```bash
-python3 ./.rudder/scripts/task.py create "<task title>" --slug <name>
+python3 ./.rudder/scripts/task.py create "<task title>" --slug <name> --platform <platform>
 ```
 
 `--slug` is the human-readable name only. Do **not** include the `MM-DD-` date prefix; `task.py create` adds that prefix automatically.
@@ -327,7 +350,7 @@ After this command succeeds, the per-turn breadcrumb auto-switches to `[workflow
 
 ⚠️ **Run only `create` here — do not also run `start`**. `start` flips status to `in_progress`, which switches the breadcrumb to the implementation phase before brainstorm + jsonl are done — the AI will silently skip them. Save `start` for step 1.4, after jsonl curation is complete.
 
-Skip when `python3 ./.rudder/scripts/task.py current --source` already points to a task.
+Skip creation only when the request belongs to a related unfinished task. Read its goal and acceptance scope before reusing it; a current pointer alone is not sufficient. Design-to-development work keeps the same task.
 
 #### 1.0.5 Prepare SQL directory `[conditional · once]`
 
@@ -346,6 +369,8 @@ mkdir -p .rudder/tasks/<task-dir>/sql/
 #### 1.1 Requirement exploration `[required · repeatable]`
 
 Load the `rudder-brainstorm` skill and explore requirements interactively with the user per the skill's guidance.
+
+If the user already approved the clearly agreed plan, persist it and proceed without another approval question. Revisit only unresolved business decisions or material scope/acceptance changes.
 
 The brainstorm skill will guide you to:
 - Ask one question at a time
@@ -425,7 +450,7 @@ python3 ./.rudder/scripts/task.py add-context "$TASK_DIR" check "<path>" "<reaso
 
 Delete the seed `_example` line once real entries exist (optional — it's skipped automatically by consumers).
 
-Skip when: `implement.jsonl` has agent-curated entries (the seed row alone doesn't count).
+Skip when: both `implement.jsonl` and `check.jsonl` already have valid agent-curated entries (seed rows alone do not count).
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
@@ -441,12 +466,12 @@ Once prd.md is complete, the user has confirmed it, and 1.3 jsonl curation is do
 
 ```bash
 python3 ./.rudder/scripts/task.py confirm <task-dir>
-python3 ./.rudder/scripts/task.py start <task-dir>
+python3 ./.rudder/scripts/task.py start <task-dir> --platform <platform>
 ```
 
 After this command succeeds, the breadcrumb auto-switches to `[workflow-state:in_progress]`, and the rest of Phase 2 / 3 follows.
 
-If `task.py start` errors with a session-identity message (no context key from hook input, `RUDDER_CONTEXT_ID`, or platform-native session env), follow the hint in the error to set up session identity, then retry.
+Use the invoking platform; Codex inline skips JSONL curation and validation even if seed files remain, while sub-agent modes require both curated files. A readiness failure leaves the task in planning: resolve its reported PRD/approval/context blockers and retry. When session identity is unavailable, start still validates readiness and enters implementation in degraded mode without persisting a session pointer.
 
 #### 1.5 Completion criteria
 
@@ -461,7 +486,7 @@ If `task.py start` errors with a session-identity message (no context key from h
 
 [Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 
-| `implement.jsonl` has agent-curated entries (not just the seed row) | ✅ |
+| Both `implement.jsonl` and `check.jsonl` have valid agent-curated entries (not just seed rows) | ✅ |
 
 [/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
 

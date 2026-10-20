@@ -4,12 +4,12 @@
 Task Management Script.
 
 Usage:
-    python3 task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>]
+    python3 task.py create "<title>" [--slug <name>] [--assignee <dev>] [--priority P0|P1|P2|P3] [--parent <dir>] [--package <pkg>] [--platform <platform>]
     python3 task.py add-context <dir> <file> <path> [reason] # Add jsonl entry
     python3 task.py validate <dir>              # Validate jsonl files
     python3 task.py confirm <dir>               # Confirm PRD requirements
     python3 task.py list-context <dir>          # List jsonl entries
-    python3 task.py start <dir>                 # Set active task
+    python3 task.py start <dir> [--platform <platform>] # Validate readiness and set active task
     python3 task.py current [--source]          # Show active task
     python3 task.py finish                      # Clear active task
     python3 task.py set-branch <dir> <branch>   # Set git branch
@@ -26,7 +26,9 @@ from __future__ import annotations
 
 import argparse
 import sys
+from typing import get_args
 
+from common.cli_adapter import Platform
 from common.log import Colors, colored
 from common.paths import (
     DIR_WORKFLOW,
@@ -106,7 +108,13 @@ def cmd_start(args: argparse.Namespace) -> int:
         print(colored(f"Error: task.json is invalid at {full_path}", Colors.RED))
         return 1
     if task_data and task_data.get("status") == "planning":
-        readiness_errors = validate_task_readiness(full_path, repo_root, task_data)
+        try:
+            readiness_errors = validate_task_readiness(
+                full_path, repo_root, task_data, getattr(args, "platform", None),
+            )
+        except ValueError as exc:
+            print(colored(f"Error: {exc}", Colors.RED))
+            return 1
         if readiness_errors:
             print(colored("Task is not ready for implementation:", Colors.RED))
             for error in readiness_errors:
@@ -153,7 +161,7 @@ def cmd_start(args: argparse.Namespace) -> int:
                     print(colored("✓ Status: planning → in_progress", Colors.GREEN))
 
         print()
-        print(colored("The hook will now inject context from this task's jsonl files.", Colors.BLUE))
+        print(colored("Task selected. Follow the workflow for the current execution mode.", Colors.BLUE))
 
         run_task_hooks("after_start", task_json_path, repo_root)
         return 0
@@ -328,12 +336,13 @@ def show_usage() -> None:
 Usage:
   python3 task.py create <title>                     Create new task directory
   python3 task.py create <title> --package <pkg>     Create task for a specific package
+  python3 task.py create <title> --platform codex    Create using Codex dispatch mode
   python3 task.py create <title> --parent <dir>      Create task as child of parent
   python3 task.py add-context <dir> <jsonl> <path> [reason]  Add entry to jsonl
   python3 task.py validate <dir>                     Validate jsonl files
   python3 task.py confirm <dir>                      Confirm requirements and PRD
   python3 task.py list-context <dir>                 List jsonl entries
-  python3 task.py start <dir>                        Set active task
+  python3 task.py start <dir> [--platform <platform>] Validate readiness and set active task
   python3 task.py current [--source]                 Show active task
   python3 task.py finish                             Clear active task
   python3 task.py set-branch <dir> <branch>          Set git branch
@@ -421,6 +430,8 @@ def main() -> int:
     p_create.add_argument("--description", "-d", help="Task description")
     p_create.add_argument("--parent", help="Parent task directory (establishes subtask link)")
     p_create.add_argument("--package", help="Package name for monorepo projects")
+    p_create.add_argument("--platform", choices=get_args(Platform),
+                          help="Invoking platform; determines whether to seed JSONL context")
 
     # add-context
     p_add = subparsers.add_parser("add-context", help="Add context entry")
@@ -444,6 +455,8 @@ def main() -> int:
     # start
     p_start = subparsers.add_parser("start", help="Set active task")
     p_start.add_argument("dir", help="Task directory")
+    p_start.add_argument("--platform", choices=get_args(Platform),
+                         help="Invoking platform; determines JSONL readiness requirements")
 
     # current
     p_current = subparsers.add_parser("current", help="Show active task")

@@ -4357,23 +4357,6 @@ describe("regression: cli_adapter platform support (beta.9, beta.13, beta.16)", 
     expect(taskContext as string).toMatch(/def cmd_list_context\b/);
   });
 
-  it("[init-context-removal] task_store.cmd_create seeds jsonl for sub-agent platforms", () => {
-    const taskStore = getAllScripts().get("common/task_store.py");
-    expect(taskStore).toBeDefined();
-    // Sub-agent platform probe.
-    expect(taskStore as string).toMatch(/_SUBAGENT_CONFIG_DIRS/);
-    expect(taskStore as string).toContain('".claude"');
-    expect(taskStore as string).toContain('".codex"');
-    expect(taskStore as string).toContain('".github/copilot"');
-    expect(taskStore as string).toContain('".pi"');
-    // Seed row is self-describing and has no `file` field (so consumers skip
-    // it naturally).
-    expect(taskStore as string).toMatch(/_write_seed_jsonl/);
-    expect(taskStore as string).toContain('"_example"');
-    // cmd_create calls into the seed path.
-    expect(taskStore as string).toMatch(/_has_subagent_platform\(repo_root\)/);
-  });
-
   // Regression for 04-22-migrate-flow-bugs Bug C: breaking releases must
   // ship a migrationGuide. Otherwise `update --migrate` generates a task
   // PRD filled with older versions' guides (or no task at all), leaving

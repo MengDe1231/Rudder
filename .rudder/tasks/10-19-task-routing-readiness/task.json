@@ -1,0 +1,32 @@
+{
+  "id": "task-routing-readiness",
+  "name": "task-routing-readiness",
+  "title": "Unify task routing and execution readiness",
+  "description": "",
+  "status": "in_progress",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "mengde",
+  "assignee": "mengde",
+  "createdAt": "2026-10-19",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {},
+  "requirements": {
+    "status": "confirmed",
+    "confirmed_by": "unknown",
+    "confirmed_at": "2026-10-19T09:39:36.163282+00:00",
+    "prd_hash": "7bc4a514a9b44b00892a038a8418437fc386b8579f48b11ab371fcd8ca7e40d3"
+  }
+}

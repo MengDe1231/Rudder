@@ -1,0 +1,3 @@
+{"file":".rudder/spec/cli/backend/quality-guidelines.md","reason":"Review code quality and minimal changes"}
+{"file":".rudder/spec/cli/backend/workflow-state-contract.md","reason":"Review consistency between instructions and runtime readiness"}
+{"file":".rudder/spec/cli/unit-test/conventions.md","reason":"Review regression coverage for inline/sub-agent mode"}
