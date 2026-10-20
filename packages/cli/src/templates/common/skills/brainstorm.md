@@ -1,6 +1,6 @@
 # Brainstorm - Requirements Discovery (AI Coding Enhanced)
 
-**CoreRule**: Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+**CoreRule**: Resolve business decisions and acceptance boundaries before implementation. Ask only questions that remain unanswered, one at a time, with a recommended option. An explicit instruction to implement a clearly agreed plan is approval; record it and continue without repeating the same confirmation.
 
 Ask the questions one at a time.
 
@@ -30,8 +30,8 @@ Triggered from {{CMD_REF:start}} when the user describes a development task, esp
 
 ## Core Principles (Non-negotiable)
 
-1. **Task-first (capture early)**
-   Always ensure a task exists at the start so the user's ideas are recorded immediately.
+1. **Route first, then capture**
+   Apply Request routing in `.rudder/workflow.md` before entering this skill. Direct answers, scheduler administration, commit-message drafting, and independent low-risk edits do not need a task. For tracked work, reuse a related unfinished task or create one for a new objective.
 
 2. **Action before asking**
    If you can derive the answer from repo code, docs, configs, conventions, or quick research — do that first.
@@ -54,21 +54,25 @@ Triggered from {{CMD_REF:start}} when the user describes a development task, esp
 
 ---
 
-## Step 0: Ensure Task Exists (ALWAYS)
+## Step 0: Establish Task Ownership
 
-Before any Q&A, ensure a task exists. If none exists, create one immediately.
+Compare the request with the current and, when relevant, other unfinished tasks' business objectives and acceptance scopes. Reuse a related task for supplements, fixes, continuation, or design-to-development; update its PRD rather than creating a duplicate. Same session/module or an active pointer alone is not evidence of relevance. If ownership is genuinely unclear, ask one focused question.
+
+For a new objective requiring durable tracking, create a task even when an unrelated task is active. Direct work was already routed out before this skill. Preserve any previous task's artifacts and status.
 
 * Use a **temporary working title** derived from the user's message.
 * It's OK if the title is imperfect — refine later in PRD.
 
 ```bash
-TASK_DIR=$(python3 ./.rudder/scripts/task.py create "brainstorm: <short goal>" --slug <auto>)
+TASK_DIR=$(python3 ./.rudder/scripts/task.py create "brainstorm: <short goal>" --slug <auto> --platform <platform>)
 ```
 
 Use a slug without a date prefix. `task.py create` adds the `MM-DD-`
 directory prefix automatically.
 
-Create/seed `prd.md` immediately with what you know:
+Replace `<platform>` with the actual invoking CLI flag (e.g. `codex`, `claude`, `gemini`), not the last platform that wrote this shared skill. Task creation and startup must use that same platform; Codex resolves its inline/sub-agent setting from `.rudder/config.yaml`.
+
+For a new task, create/seed `prd.md` immediately with what you know. For a related task, update its existing sections and preserve prior decisions:
 
 ```markdown
 # brainstorm: <short goal>
@@ -140,16 +144,15 @@ Write findings into PRD:
 
 ---
 
-## Step 2: Classify Complexity (still useful, not gating task creation)
+## Step 2: Choose Discovery Depth
 
 | Complexity   | Criteria                                               | Action                                      |
 | ------------ | ------------------------------------------------------ | ------------------------------------------- |
-| **Trivial**  | Single-line fix, typo, obvious change                  | Skip brainstorm, implement directly         |
-| **Simple**   | Clear goal, 1–2 files, scope well-defined              | Ask 1 confirm question, then implement      |
-| **Moderate** | Multiple files, some ambiguity                         | Light brainstorm (2–3 high-value questions) |
-| **Complex**  | Vague goal, architectural choices, multiple approaches | Full brainstorm                             |
+| **Clear**    | Goal, scope, and acceptance are already agreed         | Persist the plan; reuse approval and proceed |
+| **Moderate** | Some unresolved business decisions                     | Ask only the remaining high-value questions |
+| **Complex**  | Vague goal, architectural choices, multiple approaches | Explore options and converge on acceptance   |
 
-> Note: Task already exists from Step 0. Classification only affects depth of brainstorming.
+> Discovery depth does not determine task boundaries. File count alone is neither a risk measure nor a reason to ask for confirmation. If the user has already approved the scope, skip settled questions and expansion sweeps; revisit only new business decisions or material changes.
 
 ---
 
@@ -404,7 +407,7 @@ Record the outcome in PRD as an ADR-lite section:
 
 ## Step 8: Final Confirmation + Implementation Plan
 
-When open questions are resolved, confirm complete requirements with a structured summary:
+When open questions are resolved, persist the complete requirements and implementation plan. If the user has already instructed you to implement that agreed plan, reuse that approval and continue. Otherwise present the structured summary once and ask only for the outstanding approval. Do not repeat confirmation between workflow phases or for implementation-detail adjustments.
 
 ### Final confirmation format
 
@@ -449,8 +452,8 @@ For complex tasks with multiple independent work items, create subtasks:
 
 ```bash
 # Create child tasks
-CHILD1=$(python3 ./.rudder/scripts/task.py create "Child task 1" --slug child1 --parent "$TASK_DIR")
-CHILD2=$(python3 ./.rudder/scripts/task.py create "Child task 2" --slug child2 --parent "$TASK_DIR")
+CHILD1=$(python3 ./.rudder/scripts/task.py create "Child task 1" --slug child1 --parent "$TASK_DIR" --platform <platform>)
+CHILD2=$(python3 ./.rudder/scripts/task.py create "Child task 2" --slug child2 --parent "$TASK_DIR" --platform <platform>)
 
 # Or link existing tasks
 python3 ./.rudder/scripts/task.py add-subtask "$TASK_DIR" "$CHILD_DIR"
@@ -512,25 +515,23 @@ Context / Decision / Consequences
 
 ## Integration with Start Workflow
 
-After brainstorm completes (Step 8 confirmation approved), the flow continues to the Task Workflow's **Phase 2: Prepare for Implementation**:
+After requirements are complete and approved (including approval already given for the agreed plan), continue within `.rudder/workflow.md` Phase 1:
 
 ```text
 Brainstorm
-  Step 0: Create task directory + seed PRD
+  Step 0: Reuse related task or create a new tracked objective
   Step 1–7: Discover requirements, research, converge
-  Step 8: Final confirmation → user approves
+  Step 8: Persist complete requirements → reuse approval or ask once
   ↓
-Task Workflow Phase 2 (Prepare for Implementation)
-  Code-Spec Depth Check (if applicable)
-  → Research codebase (based on confirmed PRD)
-  → Configure code-spec context (jsonl files)
-  → Activate task
+Phase 1.3: Curate both JSONL files for sub-agent execution; skip for inline
+  → Phase 1.4: task.py confirm <task-dir>
+  → task.py start <task-dir> --platform <platform>
   ↓
-Task Workflow Phase 3 (Execute)
-  Implement → Check → Complete
+Phase 2 (Execute)
+  Implement → Check → Verify → Phase 3 (Finish)
 ```
 
-The task directory and PRD already exist from brainstorm, so Phase 1 of the Task Workflow is skipped entirely.
+Do not recreate the task or discard the PRD when moving from design to implementation. A PRD file alone does not mean planning is complete: requirements, approval/hash, and applicable context must pass the startup gate. Inline startup ignores existing JSONL seed files.
 
 ---
 

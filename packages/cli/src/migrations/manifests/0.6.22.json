@@ -1,0 +1,9 @@
+{
+  "version": "0.6.22",
+  "description": "Route development work by task relevance and align inline readiness",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Enhancements:**\n- feat(workflow): route direct requests, related work, and independent objectives by business goal and acceptance scope; reuse approval already given for agreed plans.\n\n**Bug Fixes:**\n- fix(tasks): share execution-mode readiness between task creation and startup. Inline execution ignores existing JSONL seeds, while sub-agent execution requires both curated context files.",
+  "migrations": [],
+  "notes": "No migration required."
+}

@@ -34,14 +34,14 @@ cat .rudder/spec/<package>/<layer>/index.md   # for each relevant layer
 Index files list the specific guideline docs to read when you actually start coding.
 
 ## Step 4: Decide next action
-From Step 1 you know the current task. Check the task directory:
+Apply **Request routing** in `.rudder/workflow.md` before resuming any phase:
 
-- **Active task + `prd.md` exists** → Phase 2 step 2.1. Load the step detail:
-  ```bash
-  {{PYTHON_CMD}} ./.rudder/scripts/get_context.py --mode phase --step 2.1 --platform {{CLI_FLAG}}
-  ```
-- **Active task + no `prd.md`** → Phase 1.1. Load the `rudder-brainstorm` skill.
-- **No active task** → when the user describes multi-step work, load the `rudder-brainstorm` skill to clarify requirements, then create a task via `task.py create`. For simple one-off questions or trivial edits, skip this and just answer directly — no task needed.
+1. Questions, code inspection, scheduler administration, and commit-message drafting are direct requests. Do not create or advance a task; only provide the requested output/action. Business features involving scheduled jobs follow normal routing.
+2. Check whether the request serves an unfinished task's **business objective and acceptance scope**. Read its PRD and status before reuse; same session/module or an active pointer alone does not establish relevance. Supplements, corrections, pre-acceptance fixes, continuation, and design-to-development reuse that task and update relevant artifacts. Check other unfinished tasks when needed; ask one focused question only if ownership is unclear.
+3. A clear, local, low-risk independent edit can be made directly with relevant guidelines and checks; no special bypass phrase or file-count threshold is required.
+4. Otherwise create a task for the independent objective needing durable tracking; an unrelated active task must not absorb it. Use `task.py create "<title>" --slug <name> --platform {{CLI_FLAG}}`, then load `rudder-brainstorm`.
+
+For a related task, follow {{CMD_REF:continue}}'s status/approval/mode-aware routing. A planning task with a PRD is **not automatically ready for implementation**. Resolve missing requirements and open questions first; user approval of the agreed plan counts as confirmation without another prompt. Curate both JSONL files only for sub-agent execution, record approval via `task.py confirm`, then run `task.py start <task-dir> --platform {{CLI_FLAG}}`. Codex inline does not require JSONL, including old seed files.
 
 ---
 

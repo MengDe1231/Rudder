@@ -16,13 +16,19 @@ Provides:
     get_phase_index   - Extract the Phase Index section (no --step)
     get_step          - Extract a single step (#### X.X) section
     filter_platform   - Strip platform blocks that don't include the given name
+    requires_task_context - Shared create/start JSONL policy for the invoking mode
 """
 
 from __future__ import annotations
 
+import os
 import re
+from pathlib import Path
+from typing import get_args
 
+from .cli_adapter import Platform
 from .paths import DIR_WORKFLOW, get_repo_root
+from .rudder_config import read_rudder_config
 
 
 def _workflow_md_path():
@@ -169,6 +175,45 @@ def resolve_effective_platform(platform: str, config: dict) -> str:
                 mode = cfg_mode
         return f"codex-{mode}"
     return platform
+
+
+# Keep the platform directories here so task creation and readiness use the
+# same policy. Shared .agents/skills is not a platform-specific signal.
+_SUBAGENT_CONFIG_DIRS: tuple[tuple[str, str], ...] = (
+    ("claude", ".claude"),
+    ("cursor", ".cursor"),
+    ("codex", ".codex"),
+    ("kiro", ".kiro"),
+    ("gemini", ".gemini"),
+    ("opencode", ".opencode"),
+    ("qoder", ".qoder"),
+    ("codebuddy", ".codebuddy"),
+    ("droid", ".factory"),
+    ("copilot", ".github/copilot"),
+    ("pi", ".pi"),
+)
+_INLINE_PLATFORMS = {"codex-inline", "kilo", "antigravity", "windsurf"}
+
+
+def requires_task_context(repo_root: Path, platform: str | None = None) -> bool:
+    """Whether this invocation needs curated implement/check JSONL context.
+
+    Explicit --platform wins over RUDDER_PLATFORM. Without either, preserve
+    directory-based detection conservatively: any configured sub-agent mode
+    requires context. Mixed-platform repositories should pass --platform so a
+    Codex inline session cannot inherit another platform's requirements.
+    """
+    config = read_rudder_config(repo_root)
+    selected = platform or os.environ.get("RUDDER_PLATFORM", "").strip().lower()
+    if selected:
+        if selected not in get_args(Platform):
+            raise ValueError(f"Unsupported platform: {selected}")
+        return resolve_effective_platform(selected, config) not in _INLINE_PLATFORMS
+    return any(
+        (repo_root / config_dir).is_dir()
+        and resolve_effective_platform(name, config) not in _INLINE_PLATFORMS
+        for name, config_dir in _SUBAGENT_CONFIG_DIRS
+    )
 
 
 def filter_platform(content: str, platform: str) -> str:

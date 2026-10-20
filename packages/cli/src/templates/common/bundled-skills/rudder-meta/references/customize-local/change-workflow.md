@@ -45,13 +45,14 @@ If the user wants only one platform to avoid sub-agents, first confirm whether t
 
 ## `/rudder:continue` Route Table
 
-`/rudder:continue` resumes a task by deciding which phase step to load next. The decision combines `task.json.status` with the presence of artifacts inside the task directory. The mapping is fixed in the command itself; forks that add custom statuses must extend both the workflow.md tag block and this table.
+`/rudder:continue` first checks request intent and task relevance by business objective and acceptance scope. Direct questions/inspection/commit-wording requests do not advance the task; independent goals follow direct-low-risk/new-task routing. For related work, the decision combines `task.json.status`, PRD completeness and approval, and the invoking platform's execution mode. Forks that add custom statuses must extend both the workflow.md tag block and this table.
 
 | `status` | Artifact state | Resume at |
 | --- | --- | --- |
-| `planning` | `prd.md` missing | Phase 1.1 (load `rudder-brainstorm`) |
-| `planning` | `prd.md` exists, `implement.jsonl` only has the seed `_example` row | Phase 1.3 (curate JSONL context) |
-| `planning` | `prd.md` exists, `implement.jsonl` curated | Phase 1.4 (run `task.py start`) |
+| `planning` | PRD missing/incomplete, unresolved decisions, or no approval | Phase 1.1 (resolve only outstanding decisions; reuse prior approval of the agreed plan) |
+| `planning` | PRD approved, confirmation missing/stale | Record approval with `task.py confirm`; do not ask again unless requirements materially changed |
+| `planning` | Confirmed PRD; sub-agent mode; either JSONL missing/invalid/seed-only | Phase 1.3 (curate both context files) |
+| `planning` | Confirmed PRD; inline mode OR both required context files valid/curated | Phase 1.4 (`task.py start <task> --platform <platform>`; inline ignores old seeds) |
 | `in_progress` | no implementation in conversation history | Phase 2.1 (`rudder-implement`) |
 | `in_progress` | implementation done, no `rudder-check` run | Phase 2.2 (`rudder-check`) |
 | `in_progress` | check passed | Phase 3.1 (verify quality + spec update) |

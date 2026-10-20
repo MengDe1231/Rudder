@@ -8,6 +8,7 @@ import json
 import re
 from pathlib import Path
 
+from .workflow_phase import requires_task_context
 
 _SECTION_RE = re.compile(r"^##\s+(.+?)\s*$", re.IGNORECASE)
 _CHECKBOX_RE = re.compile(r"^\s*[-*+]\s+\[[ xX]\]\s+\S+")
@@ -116,6 +117,9 @@ def _jsonl_entries(path: Path, repo_root: Path) -> tuple[int, list[str]]:
         except json.JSONDecodeError:
             errors.append(f"{path.name}:{line_number} contains invalid JSON")
             continue
+        if not isinstance(data, dict):
+            errors.append(f"{path.name}:{line_number} must contain a JSON object")
+            continue
         file_path = data.get("file")
         if not file_path:
             continue
@@ -129,11 +133,13 @@ def _jsonl_entries(path: Path, repo_root: Path) -> tuple[int, list[str]]:
     return entries, errors
 
 
-def validate_context_files(task_dir: Path, repo_root: Path) -> list[str]:
-    """Validate JSONL only when the task opted into sub-agent context files."""
-    files = [task_dir / "implement.jsonl", task_dir / "check.jsonl"]
-    if not any(path.exists() for path in files):
+def validate_context_files(
+    task_dir: Path, repo_root: Path, platform: str | None = None,
+) -> list[str]:
+    """Require curated JSONL for sub-agent execution, including missing files."""
+    if not requires_task_context(repo_root, platform):
         return []
+    files = [task_dir / "implement.jsonl", task_dir / "check.jsonl"]
     errors: list[str] = []
     for path in files:
         entries, entry_errors = _jsonl_entries(path, repo_root)
@@ -147,10 +153,11 @@ def validate_task_readiness(
     task_dir: Path,
     repo_root: Path,
     task_data: dict,
+    platform: str | None = None,
 ) -> list[str]:
     """Return blocking reasons for a planning task entering implementation."""
     errors = validate_prd(task_dir / "prd.md")
-    errors.extend(validate_context_files(task_dir, repo_root))
+    errors.extend(validate_context_files(task_dir, repo_root, platform))
 
     requirements = task_data.get("requirements")
     if not isinstance(requirements, dict) or requirements.get("status") != "confirmed":

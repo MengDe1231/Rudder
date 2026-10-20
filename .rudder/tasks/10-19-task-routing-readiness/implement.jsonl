@@ -1,0 +1,3 @@
+{"file":".rudder/spec/cli/backend/script-conventions.md","reason":"Python standard library, paths, template registration and session behavior"}
+{"file":".rudder/spec/cli/backend/workflow-state-contract.md","reason":"Workflow breadcrumbs, source of truth, status and resume contracts"}
+{"file":".rudder/spec/cli/unit-test/conventions.md","reason":"Regression scenarios and meaningful assertions"}
